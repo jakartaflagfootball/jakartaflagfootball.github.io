@@ -1,0 +1,18 @@
+id,name,gender,status,start_date,end_date,location,num_teams,num_matches,champion,runner_up,third_place,fourth_place
+362b627d-9493-46b7-9306-a8740c342c2f,5v5 Tourney 2022 : Women’s,F,5,2022-09-17,2022-10-10,Lapangan Hockey Senayan,4,7,Green Mambas,Pumpkins,,
+89e73e7f-7938-4aa4-8a68-167921667cb2,5v5 Tourney 2022 : Men’s Minor,M,5,2022-09-17,2022-10-10,Lapangan Hockey Senayan,4,7,Bullhorns,Copperheads,,
+ebad8ec1-2835-471e-9437-797093715ac2,5v5 Tourney 2022 : Men’s Major,M,5,2022-09-17,2022-10-10,Lapangan Hockey Senayan,4,7,Doflamingo,BENCANA,,
+2b973a24-0c8b-4fc8-9b4f-8f734f83539d,Jakarta Bowl by Sambal Bakar,M,5,2023-03-18,2023-08-25,AIS Indonesia Jakarta,6,33,Nightwing,Capitals,,
+19745c69-0f49-42b2-a7bc-e59afab19b30,JFF Men’s Open SZN 1 by Marugame Udon,M,5,2023-09-23,2023-11-27,Al-Izhar Pondok Labu,23,63,Spectres,T13. Galunggung,Headshoes Union,Silverback Wolves
+f8f31441-5391-4669-9501-8879cddaaae8,WFF Batavia Minor League 2024,F,5,2024-02-02,2024-02-20,Hockey Field A,6,18,BULLRED,PINA COLADA,HONEY BADGER BLITZ,
+8e6d9a5d-1454-4d3d-a80a-0db24ae2e5d8,JFF's Development Arena : Rising Stars by Imboost,M,5,2024-02-24,2024-03-05,Stadion VIJ Petojo,6,24,Neptune,Jade Jesters,Phantom Menace,Cerberus
+0191b644-9472-716d-a0b9-77ca094db601,AIA Vitality WFF Jakarta League 2024,F,5,2024-09-08,2024-11-19,Australian Independent (International) School - AIS,7,24,Dracarys,Orcas,Panthers,
+01925ca8-d74b-74d9-a325-d6fe17f50860,Open SZN 2 by Kohai Izakaya,M,5,2024-11-16,2024-12-07,Al-Izhar Pondok Labu,16,44,Cygnus,Spectres,Tungsten,Glorius
+01949147-7fd3-7c36-9a99-128eb49cb965,WFF Minor League 2025 : DevZone,F,5,2025-02-01,2025-03-08,GBK Hockey Field,4,10,HERA,ARTEMIS,ATHENA,APHRODITE
+0194b06e-1824-7e83-88bd-df2b8dd3feb3,JFF MINOR LEAGUE 2025: DevZone,M,5,2025-02-01,2025-03-08,GBK Hockey Field,4,10,HADES,ZEUS,ARES,Poseidon
+b96678d3-b8aa-40e9-9e08-a83bd2594585,JFF’s 8v8 League by Sambal Bakar,M,5,2024-04-28,2025-03-17,Australian Independent (International) School - AIS,9,43,Capitals,Headshoes Union,,
+01966775-8282-7f5d-8283-a254b292e5f5,JFF’s 8v8 League by Sambal Bakar 2025,M,5,2025-04-27,2025-08-09,Australian Independent (International) School - AIS,6,33,KBS,Bombshells,,
+0199e202-457e-7fc1-af98-dd225d4333e7,Open SZN 3 by LLTTFOC (Men),M,5,2025-11-02,2025-12-08,Al-Izhar Pondok Labu,16,44,Cygnus,TAFF Sports Team,Toro Rosso,Boars
+0199e22f-c590-7148-a7da-8e1ad5f202a8,Open SZN 3 by LLTTFOC (Women),F,5,2025-11-02,2025-12-09,Al-Izhar Pondok Labu,7,27,Dracarys,Orion,Warwolves,Orcas
+019c3113-a62c-7a02-8a96-7d19f71edd06,DevZone 3 - Womens,F,5,2026-02-07,2026-02-23,DM Sport Ciledug,4,9,Crimson Thorn,Nightshade,Aster,
+019c30fe-1624-7274-9b76-c4f1058bd876,DevZone 3 - Mens,M,5,2026-02-07,2026-02-23,DM Sport Ciledug,4,9,Strix,Ironhorn,Seagulls,

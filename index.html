@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JFF Stats — Jakarta Flag Football</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">Jakarta Flag Football<span>Stats Hub</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-lines"></div>
+  <div class="hero-content">
+    <div class="hero-label">Jakarta Flag Football · Official Records</div>
+    <h1 class="hero-title">THE STATS<br><span>HUB</span></h1>
+    <p class="hero-sub">Every tournament. Every match. Every team. All of JFF history in one place.</p>
+    <div class="hero-cta">
+      <a href="tournaments.html" class="btn-primary">Browse Tournaments</a>
+      <a href="teams.html" class="btn-secondary">Team Profiles</a>
+    </div>
+  </div>
+</header>
+
+<section class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num" id="totalTournaments">—</span>
+    <span class="stat-label">Tournaments</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="totalMatches">—</span>
+    <span class="stat-label">Matches Played</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="totalTeams">—</span>
+    <span class="stat-label">Teams</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="totalPlayers">—</span>
+    <span class="stat-label">Players</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="totalYears">—</span>
+    <span class="stat-label">Years of JFF</span>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Recent Tournaments</h2>
+      <a href="tournaments.html" class="see-all">See all →</a>
+    </div>
+    <div class="tournament-grid" id="recentTournaments">
+      <div class="loading">Loading tournaments...</div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <h2>All-Time Leaderboard</h2>
+      <a href="teams.html" class="see-all">See all →</a>
+    </div>
+    <div class="leaderboard" id="topTeams">
+      <div class="loading">Loading teams...</div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo"><img src="jff-logo.png" alt="JFF"></div>
+    <p>Jakarta Flag Football · Est. 2022</p>
+    <p class="footer-small">Data sourced from Reclub · Updated after each tournament</p>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadData();
+
+    const years = new Set(competitions.map(c => c.start_date?.split('-')[0]).filter(Boolean));
+    const teamNames = new Set(matches.flatMap(m => [m.team1, m.team2]).filter(Boolean));
+
+    animateNum('totalTournaments', competitions.length);
+    animateNum('totalMatches', matches.filter(m => m.score1 !== '' && m.score1 != null).length);
+    animateNum('totalTeams', teamNames.size);
+    animateNum('totalPlayers', players ? players.length : 0);
+    animateNum('totalYears', Math.max(0, years.size - 1));
+
+    // Recent tournaments
+    const recent = [...competitions]
+      .sort((a,b) => (b.start_date||'').localeCompare(a.start_date||''))
+      .slice(0, 6);
+    document.getElementById('recentTournaments').innerHTML =
+      recent.map(t => tournamentCard(t)).join('');
+
+    // Leaderboard — from match results (ground truth), same as teams page
+    const teamWins = {};
+    matches.forEach(m => {
+      if (m.score1 === '' || m.score1 == null || m.score2 === '' || m.score2 == null) return;
+      for (const team of [m.team1, m.team2]) {
+        if (!team) continue;
+        if (!teamWins[team]) teamWins[team] = { wins:0, losses:0, tournaments:new Set() };
+        teamWins[team].tournaments.add(m.competition);
+      }
+      if (m.winner === 'Draw') {
+        // no W or L
+      } else if (m.winner) {
+        if (teamWins[m.winner]) teamWins[m.winner].wins++;
+        const loser = m.winner === m.team1 ? m.team2 : m.team1;
+        if (teamWins[loser]) teamWins[loser].losses++;
+      }
+    });
+    Object.values(teamWins).forEach(s => s.tournaments = s.tournaments.size);
+
+    const sorted = Object.entries(teamWins)
+      .sort((a,b) => b[1].wins - a[1].wins)
+      .slice(0, 8);
+
+    document.getElementById('topTeams').innerHTML = sorted.map(([name, stats], i) => `
+      <a href="teams.html?team=${encodeURIComponent(name)}" class="lb-row">
+        <span class="lb-rank">${i+1}</span>
+        <span class="lb-name">${name}</span>
+        <span class="lb-stat">${stats.wins}W</span>
+        <span class="lb-stat muted">${stats.losses}L</span>
+        <span class="lb-stat accent">${stats.tournaments} tournament${stats.tournaments !== 1 ? 's' : ''}</span>
+      </a>
+    `).join('');
+  });
+
+  function animateNum(id, target) {
+    const el = document.getElementById(id);
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 30));
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(timer);
+    }, 40);
+  }
+</script>
+</body>
+</html>
