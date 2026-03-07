@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Players — JFF Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ── Player list ── */
+  .players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .player-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.1rem;
+    cursor: pointer;
+    transition: border-color .2s, transform .15s;
+    text-decoration: none;
+    display: block;
+  }
+  .player-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .player-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem; color: #000;
+    margin-bottom: .85rem;
+  }
+  .player-name {
+    font-weight: 600; font-size: .95rem;
+    color: var(--text); margin-bottom: .3rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .player-meta {
+    font-size: .78rem; color: var(--muted);
+    display: flex; gap: .6rem; flex-wrap: wrap;
+  }
+  .player-meta span { display: flex; align-items: center; gap: .2rem; }
+
+  /* ── Leaderboard section ── */
+  .lb-tabs {
+    display: flex; gap: .5rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .lb-tab {
+    padding: .4rem 1rem; border-radius: 20px; font-size: .82rem;
+    font-weight: 500; cursor: pointer; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); transition: all .2s;
+  }
+  .lb-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  .lb-player-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: .85rem 1rem; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    margin-bottom: .5rem; cursor: pointer; transition: border-color .2s;
+    text-decoration: none;
+  }
+  .lb-player-row:hover { border-color: var(--accent); }
+  .lb-player-row.highlighted { border-color: var(--accent); }
+  .lb-rank-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+    color: var(--muted); min-width: 28px; text-align: center;
+  }
+  .lb-rank-num.gold   { color: #FFD700; }
+  .lb-rank-num.silver { color: #C0C0C0; }
+  .lb-rank-num.bronze { color: #CD7F32; }
+  .lb-player-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center;
+    justify-content: center; font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem; color: #000; flex-shrink: 0;
+  }
+  .lb-player-name { flex: 1; font-weight: 500; font-size: .92rem; color: var(--text); }
+  .lb-player-val  { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--accent); }
+  .lb-player-sub  { font-size: .75rem; color: var(--muted); }
+
+  /* ── Profile view ── */
+  .player-profile-hero {
+    background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0 2rem;
+  }
+  .player-profile-top {
+    display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .profile-avatar-lg {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center;
+    justify-content: center; font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem; color: #000; flex-shrink: 0;
+  }
+  .profile-player-name {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem;
+    color: var(--text); line-height: 1;
+  }
+  .profile-player-username { font-size: .85rem; color: var(--muted); margin-top: .2rem; }
+  .player-stats-row {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+  }
+  .pstat { display: flex; flex-direction: column; }
+  .pstat-num { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--accent); line-height: 1; }
+  .pstat-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-top: .15rem; }
+
+  .profile-two-col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    padding: 2.5rem 0 4rem;
+  }
+  @media (max-width: 700px) { .profile-two-col { grid-template-columns: 1fr; } }
+
+  .match-history-row {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .7rem 0; border-bottom: 1px solid var(--border);
+  }
+  .match-history-row:last-child { border-bottom: none; }
+  .result-badge {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .8rem; flex-shrink: 0;
+  }
+  .result-badge.w { background: rgba(0,229,160,.15); color: #00e5a0; }
+  .result-badge.l { background: rgba(255,80,80,.12); color: #ff5050; }
+  .result-badge.d { background: rgba(255,200,0,.12); color: #ffc800; }
+  .mh-info { flex: 1; min-width: 0; }
+  .mh-opponent { font-weight: 500; font-size: .88rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mh-comp { font-size: .75rem; color: var(--muted); }
+  .mh-score { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--text); white-space: nowrap; }
+
+  .history-row {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .75rem 0; border-bottom: 1px solid var(--border);
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-medal { font-size: 1.1rem; width: 24px; text-align: center; }
+  .history-info { flex: 1; min-width: 0; }
+  .history-comp { font-weight: 500; font-size: .88rem; color: var(--text); }
+  .history-date { font-size: .75rem; color: var(--muted); }
+  .history-record { font-family: 'Bebas Neue', sans-serif; font-size: .95rem; color: var(--muted); white-space: nowrap; }
+  .history-team-tag {
+    font-size: .72rem; background: rgba(255,200,0,.1); color: var(--accent);
+    padding: .1rem .5rem; border-radius: 4px; margin-top: .2rem; display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">Jakarta Flag Football<span>Stats Hub</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html" class="active">Players</a>
+  </div>
+</nav>
+
+<!-- ── PROFILE VIEW ── -->
+<div id="playerProfileView" style="display:none">
+  <div class="player-profile-hero">
+    <div class="container">
+      <a href="players.html" class="back-link">← All Players</a>
+      <div class="player-profile-top" style="margin-top:1rem">
+        <div class="profile-avatar-lg" id="profileAvatarLg"></div>
+        <div>
+          <div class="profile-player-name" id="profilePlayerName"></div>
+          <div class="profile-player-username" id="profilePlayerUsername"></div>
+        </div>
+      </div>
+      <div class="player-stats-row" id="playerStatsRow"></div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="profile-two-col">
+      <div>
+        <h3 class="section-label">Tournament History</h3>
+        <div id="playerHistory"></div>
+      </div>
+      <div>
+        <h3 class="section-label">Match Results</h3>
+        <div id="playerMatches"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LIST VIEW ── -->
+<div id="playersListView">
+  <div class="page-header">
+    <div class="container">
+      <h1 class="page-title">Players</h1>
+      <p class="page-sub">Every athlete who has competed in JFF</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2rem">
+    <input type="text" id="playerSearch" class="search-input" placeholder="Search players..." style="max-width:400px">
+  </div>
+
+  <!-- Leaderboards -->
+  <div class="container" style="padding-top:2rem">
+    <div class="section-header">
+      <h2>Top Players</h2>
+    </div>
+    <div class="lb-tabs">
+      <button class="lb-tab active" onclick="switchTab('wins', this)">Most Wins</button>
+      <button class="lb-tab" onclick="switchTab('tournaments', this)">Most Tournaments</button>
+      <button class="lb-tab" onclick="switchTab('winrate', this)">Best Win Rate</button>
+    </div>
+    <div id="playerLeaderboard"></div>
+  </div>
+
+  <!-- All players grid -->
+  <div class="container" style="padding-bottom:4rem">
+    <div class="section-header" style="margin-top:2.5rem">
+      <h2>All Players</h2>
+      <span class="see-all" id="playerCount" style="color:var(--muted);font-size:.85rem"></span>
+    </div>
+    <div class="players-grid" id="playersGrid">
+      <div class="loading">Loading players...</div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo"><img src="jff-logo.png" alt="JFF"></div>
+    <p>Jakarta Flag Football · Est. 2022</p>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+  let allPlayerStats = [];
+  let currentTab = 'wins';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadData();
+
+    const params = new URLSearchParams(window.location.search);
+    const playerParam = params.get('player');
+    if (playerParam) showPlayerProfile(playerParam);
+    else showPlayersList();
+  });
+
+  function buildPlayerStats() {
+    // Build a lookup: player_id -> player info
+    const playerById = {};
+    if (players) {
+      players.forEach(p => { playerById[p.player_id] = p; });
+    }
+
+    // Build per-player stats from rosters + matches
+    // rosters CSV links player_id to competition+team
+    const playerStats = {};
+
+    if (rosters) {
+      rosters.forEach(r => {
+        const pid = r.player_id;
+        if (!pid) return;
+        if (!playerStats[pid]) {
+          const info = playerById[pid] || {};
+          playerStats[pid] = {
+            id: pid,
+            name: info.name || pid,
+            wins: 0, losses: 0, draws: 0,
+            tournaments: new Set(),
+            teams: new Set(),
+            matchHistory: []
+          };
+        }
+        if (r.competition) playerStats[pid].tournaments.add(r.competition);
+        if (r.team) playerStats[pid].teams.add(r.team);
+      });
+    }
+
+    // Count W/L from matches via rosters team membership
+    // Build: competition+team -> [player_ids]
+    const rosterMap = {};
+    if (rosters) {
+      rosters.forEach(r => {
+        const key = (r.competition || '') + '|||' + (r.team || '');
+        if (!rosterMap[key]) rosterMap[key] = [];
+        rosterMap[key].push(r.player_id);
+      });
+    }
+
+    matches.forEach(m => {
+      if (m.score1 === '' || m.score1 == null || m.score2 === '' || m.score2 == null) return;
+      const key1 = (m.competition || '') + '|||' + (m.team1 || '');
+      const key2 = (m.competition || '') + '|||' + (m.team2 || '');
+      const players1 = rosterMap[key1] || [];
+      const players2 = rosterMap[key2] || [];
+
+      const processPlayers = (pids, myTeam, oppTeam, myScore, oppScore) => {
+        pids.forEach(pid => {
+          if (!playerStats[pid]) return;
+          const result = m.winner === 'Draw' ? 'D' : m.winner === myTeam ? 'W' : 'L';
+          if (result === 'W') playerStats[pid].wins++;
+          else if (result === 'L') playerStats[pid].losses++;
+          else playerStats[pid].draws++;
+          playerStats[pid].matchHistory.push({
+            competition: m.competition,
+            date: m.date || '',
+            myTeam, oppTeam,
+            myScore, oppScore,
+            result
+          });
+        });
+      };
+
+      processPlayers(players1, m.team1, m.team2, m.score1, m.score2);
+      processPlayers(players2, m.team2, m.team1, m.score2, m.score1);
+    });
+
+    // Convert sets
+    Object.values(playerStats).forEach(p => {
+      p.tournaments = p.tournaments.size;
+      p.teams = [...p.teams];
+    });
+
+    return Object.values(playerStats).filter(p => p.tournaments > 0 || p.wins + p.losses > 0);
+  }
+
+  function showPlayersList() {
+    document.getElementById('playersListView').style.display = 'block';
+    document.getElementById('playerProfileView').style.display = 'none';
+
+    allPlayerStats = buildPlayerStats();
+
+    renderLeaderboard('wins');
+    renderGrid(allPlayerStats);
+
+    document.getElementById('playerSearch').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      renderGrid(allPlayerStats.filter(p => p.name.toLowerCase().includes(q) || p.id.toString().includes(q)));
+    });
+  }
+
+  function switchTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderLeaderboard(tab);
+  }
+
+  function renderLeaderboard(tab) {
+    let sorted;
+    if (tab === 'wins') {
+      sorted = [...allPlayerStats].sort((a,b) => b.wins - a.wins).slice(0, 10);
+    } else if (tab === 'tournaments') {
+      sorted = [...allPlayerStats].sort((a,b) => b.tournaments - a.tournaments).slice(0, 10);
+    } else {
+      // win rate — min 5 games
+      sorted = [...allPlayerStats]
+        .filter(p => p.wins + p.losses >= 5)
+        .sort((a,b) => {
+          const wr_a = a.wins / (a.wins + a.losses);
+          const wr_b = b.wins / (b.wins + b.losses);
+          return wr_b - wr_a;
+        }).slice(0, 10);
+    }
+
+    const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+    document.getElementById('playerLeaderboard').innerHTML = sorted.map((p, i) => {
+      let val, sub;
+      if (tab === 'wins') {
+        val = p.wins + 'W';
+        sub = `${p.wins + p.losses} games`;
+      } else if (tab === 'tournaments') {
+        val = p.tournaments;
+        sub = `${p.wins}W ${p.losses}L`;
+      } else {
+        val = Math.round(p.wins / (p.wins + p.losses) * 100) + '%';
+        sub = `${p.wins}W ${p.losses}L`;
+      }
+      return `
+        <a href="players.html?player=${encodeURIComponent(p.id)}" class="lb-player-row">
+          <span class="lb-rank-num ${rankClass(i)}">${i+1}</span>
+          <div class="lb-player-avatar">${p.name.charAt(0).toUpperCase()}</div>
+          <span class="lb-player-name">${p.name}</span>
+          <div style="text-align:right">
+            <div class="lb-player-val">${val}</div>
+            <div class="lb-player-sub">${sub}</div>
+          </div>
+        </a>`;
+    }).join('') || '<p class="empty">Not enough data.</p>';
+  }
+
+  function renderGrid(list) {
+    const sorted = [...list].sort((a,b) => b.wins - a.wins);
+    document.getElementById('playerCount').textContent = sorted.length + ' players';
+    const grid = document.getElementById('playersGrid');
+    if (!sorted.length) { grid.innerHTML = '<p class="empty">No players found.</p>'; return; }
+
+    grid.innerHTML = sorted.map(p => {
+      const gp = p.wins + p.losses + p.draws;
+      const wr = gp > 0 ? Math.round(p.wins / (p.wins + p.losses || 1) * 100) : 0;
+      return `
+        <a href="players.html?player=${encodeURIComponent(p.id)}" class="player-card">
+          <div class="player-avatar">${p.name.charAt(0).toUpperCase()}</div>
+          <div class="player-name">${p.name}</div>
+          <div class="player-meta">
+            <span>${p.wins}W – ${p.losses}L</span>
+            <span>${wr}% WR</span>
+            <span>🏟 ${p.tournaments}</span>
+          </div>
+        </a>`;
+    }).join('');
+  }
+
+  function showPlayerProfile(playerId) {
+    document.getElementById('playersListView').style.display = 'none';
+    document.getElementById('playerProfileView').style.display = 'block';
+
+    allPlayerStats = buildPlayerStats();
+    const p = allPlayerStats.find(p => p.id.toString() === playerId.toString());
+    if (!p) {
+      document.getElementById('playerProfileView').innerHTML = '<div class="container" style="padding:3rem 0"><p class="empty">Player not found.</p></div>';
+      return;
+    }
+
+    document.title = `${p.name} — JFF Stats`;
+    document.getElementById('profileAvatarLg').textContent = p.name.charAt(0).toUpperCase();
+    document.getElementById('profilePlayerName').textContent = p.name;
+    document.getElementById('profilePlayerUsername').textContent = p.id !== p.name ? `ID: ${p.id}` : '';
+
+    const gp = p.wins + p.losses + p.draws;
+    const wr = gp > 0 ? Math.round(p.wins / (p.wins + p.losses || 1) * 100) : 0;
+
+    document.getElementById('playerStatsRow').innerHTML = `
+      <div class="pstat"><span class="pstat-num">${p.wins}</span><span class="pstat-label">Wins</span></div>
+      <div class="pstat"><span class="pstat-num">${p.losses}</span><span class="pstat-label">Losses</span></div>
+      ${p.draws > 0 ? `<div class="pstat"><span class="pstat-num">${p.draws}</span><span class="pstat-label">Draws</span></div>` : ''}
+      <div class="pstat"><span class="pstat-num">${wr}%</span><span class="pstat-label">Win Rate</span></div>
+      <div class="pstat"><span class="pstat-num">${p.tournaments}</span><span class="pstat-label">Tournaments</span></div>
+      <div class="pstat"><span class="pstat-num">${p.teams.length}</span><span class="pstat-label">Teams Played For</span></div>
+    `;
+
+    // Tournament history
+    const compDates = {};
+    competitions.forEach(c => compDates[c.name] = c.start_date);
+
+    const byComp = {};
+    p.matchHistory.forEach(m => {
+      if (!byComp[m.competition]) byComp[m.competition] = { w:0, l:0, d:0, teams: new Set() };
+      if (m.result === 'W') byComp[m.competition].w++;
+      else if (m.result === 'L') byComp[m.competition].l++;
+      else byComp[m.competition].d++;
+      byComp[m.competition].teams.add(m.myTeam);
+    });
+
+    const compPlacements = {};
+    competitions.forEach(c => {
+      compPlacements[c.name] = { champion: c.champion, runner_up: c.runner_up, third_place: c.third_place };
+    });
+
+    const histRows = Object.keys(byComp).sort((a,b) => (compDates[b]||'').localeCompare(compDates[a]||''));
+    document.getElementById('playerHistory').innerHTML = histRows.map(comp => {
+      const rec = byComp[comp];
+      const pl = compPlacements[comp] || {};
+      const teamList = [...rec.teams].join(', ');
+      const record = rec.d > 0 ? `${rec.w}W – ${rec.l}L – ${rec.d}D` : `${rec.w}W – ${rec.l}L`;
+      // Check if their team won
+      const myTeams = [...rec.teams];
+      const medal = myTeams.includes(pl.champion) ? '🥇'
+        : myTeams.includes(pl.runner_up) ? '🥈'
+        : myTeams.includes(pl.third_place) ? '🥉' : '';
+      return `
+        <div class="history-row">
+          <span class="history-medal">${medal}</span>
+          <div class="history-info">
+            <div class="history-comp">${comp}</div>
+            <div class="history-date">${compDates[comp] || ''}</div>
+            <span class="history-team-tag">${teamList}</span>
+          </div>
+          <div class="history-record">${record}</div>
+        </div>`;
+    }).join('') || '<p class="empty">No tournament history.</p>';
+
+    // Match results
+    const sortedMatches = [...p.matchHistory].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    document.getElementById('playerMatches').innerHTML = sortedMatches.map(m => `
+      <div class="match-history-row">
+        <span class="result-badge ${m.result.toLowerCase()}">${m.result}</span>
+        <div class="mh-info">
+          <div class="mh-opponent">vs ${m.oppTeam}</div>
+          <div class="mh-comp">${m.competition} · ${m.date}</div>
+        </div>
+        <div class="mh-score">${m.myScore} – ${m.oppScore}</div>
+      </div>
+    `).join('') || '<p class="empty">No match results found.</p>';
+  }
+</script>
+</body>
+</html>
