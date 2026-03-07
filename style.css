@@ -803,17 +803,101 @@ a { color: inherit; text-decoration: none; }
 .loading { color: var(--muted); font-size: 0.88rem; padding: 2rem 0; }
 .empty { color: var(--muted); font-size: 0.88rem; padding: 1rem 0; font-style: italic; }
 
-@media (max-width: 600px) {
-  .nav { padding: 0.85rem 1rem; }
-  .nav-links { gap: 1.25rem; }
-  .stat-item { padding: 0.25rem 1.25rem; }
+/* ─── BOTTOM TAB BAR ─────────────────────────── */
+.bottom-tab-bar {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 1rem; }
+  .page-header { padding: 6rem 0 2rem; }
+  .profile-hero { padding: 6rem 0 2rem; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .teams-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .modal { padding: 1.25rem; }
+  .modal-title { font-size: 1.5rem; }
+  .match-row { font-size: 0.78rem; gap: 0.4rem; }
   .tr-right { display: none; }
-  .pstat { padding-right: 1.25rem; margin-right: 1.25rem; }
+  .tournament-row { padding: 0.85rem 1rem; }
+  .btn-primary, .btn-secondary { padding: 0.75rem 1.5rem; font-size: 0.78rem; }
+  /* Add padding so content doesn't hide behind bottom tab bar */
+  body { padding-bottom: 64px; }
 }
-/* ─── PLAYBOOK NAV LINK ──────────────────────── */
-.nav-playbook {
-  color: var(--gold) !important;
-  border-bottom-color: transparent !important;
+
+@media (max-width: 480px) {
+  /* ── Nav: hide logo text, keep icon only ── */
+  .nav { padding: 0.75rem 1rem; }
+  .nav-logo-text { display: none; }
+  /* ── Hide nav links — replaced by bottom tab bar ── */
+  .nav-links { display: none; }
+
+  /* ── Bottom tab bar ── */
+  .bottom-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 200;
+    background: rgba(14,14,14,0.97);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    height: 64px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    padding: 8px 4px;
+  }
+  .tab-item.active { color: var(--accent); }
+  .tab-item:hover { color: var(--text); }
+  .tab-icon { font-size: 1.3rem; line-height: 1; }
+  .tab-item.playbook { color: var(--gold); }
+  .tab-item.playbook.active { color: var(--gold); }
+
+  /* ── Stats bar: 3-column grid ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 0;
+  }
+  .stat-divider { display: none; }
+  .stat-item {
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .stat-item:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.15); }
+  .stat-num { font-size: 1.8rem; }
+  .stat-label { font-size: 0.58rem; letter-spacing: 0.07em; }
+
+  /* ── Leaderboard: clean 3-column layout ── */
+  .lb-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 36px 36px;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    overflow: hidden;
+  }
+  .lb-rank { font-size: 1.1rem; width: auto; text-align: center; }
+  .lb-name { font-size: 0.84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .lb-stat { font-size: 0.78rem; text-align: right; min-width: 0; }
+  .lb-stat.accent { display: none; } /* hide tournament count, show only W/L */
+
+  /* Profile */
+  .pstat { padding-right: 1rem; margin-right: 1rem; }
+  .pstat-num { font-size: 1.8rem; }
+
+  /* Hero */
+  .hero-title { font-size: clamp(3.5rem, 18vw, 5rem); }
 }
-.nav-playbook:hover { color: var(--accent-bright) !important; }
