@@ -811,3 +811,9 @@ a { color: inherit; text-decoration: none; }
   .tr-right { display: none; }
   .pstat { padding-right: 1.25rem; margin-right: 1.25rem; }
 }
+/* ─── PLAYBOOK NAV LINK ──────────────────────── */
+.nav-playbook {
+  color: var(--gold) !important;
+  border-bottom-color: transparent !important;
+}
+.nav-playbook:hover { color: var(--accent-bright) !important; }
