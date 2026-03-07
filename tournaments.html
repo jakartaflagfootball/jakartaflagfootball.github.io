@@ -119,6 +119,17 @@
     `).join('');
   }
 
+
+  function teamLogo(name, sizePx = 40, cssClass = '') {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const exts = ['png', 'jpg', 'jpeg', 'svg'];
+    return `<img
+      src="team-logos/${slug}.png"
+      alt="${name}"
+      class="team-logo ${cssClass}"
+      style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;flex-shrink:0"
+      onerror="(function(el){var exts=['png','jpg','jpeg','svg'];var slug='${slug}';var cur=el.src.split('.').pop();var idx=exts.indexOf(cur);if(idx<exts.length-1){el.src='team-logos/'+slug+'.'+exts[idx+1];}else{el.style.display='none';var fb=document.createElement('div');fb.className='team-card-avatar lb-avatar';fb.style.cssText='width:${sizePx}px;height:${sizePx}px;font-size:${Math.round(sizePx*0.4)}px;flex-shrink:0;display:flex;align-items:center;justify-content:center';fb.textContent='${name.charAt(0).toUpperCase()}';el.insertAdjacentElement('afterend',fb);}})(this)">`;
+  }
   function openTournament(id) {
     const comp = competitions.find(c => c.id === id);
     if (!comp) return;
@@ -173,7 +184,7 @@
         const medal = s.place == 1 ? '🥇' : s.place == 2 ? '🥈' : s.place == 3 ? '🥉' : `#${s.place}`;
         html += `<tr>
           <td>${medal}</td>
-          <td><a href="teams.html?team=${encodeURIComponent(s.team)}" onclick="closeModal()">${s.team}</a></td>
+          <td><a href="teams.html?team=${encodeURIComponent(s.team)}" onclick="closeModal()" style="display:flex;align-items:center;gap:6px">${teamLogo(s.team, 24, 'modal-team-logo')}${s.team}</a></td>
           <td>${s.wins}</td><td>${s.losses}</td><td>${s.points}</td><td>${s.score_diff}</td>
         </tr>`;
       });

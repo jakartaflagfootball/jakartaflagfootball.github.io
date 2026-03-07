@@ -145,6 +145,7 @@
     document.getElementById('topTeams').innerHTML = sorted.map(([name, stats], i) => `
       <a href="teams.html?team=${encodeURIComponent(name)}" class="lb-row">
         <span class="lb-rank">${i+1}</span>
+        ${teamLogo(name, 28, 'lb-logo')}
         <span class="lb-name">${name}</span>
         <span class="lb-stat">${stats.wins}W</span>
         <span class="lb-stat muted">${stats.losses}L</span>
@@ -153,6 +154,17 @@
     `).join('');
   });
 
+
+  function teamLogo(name, sizePx = 40, cssClass = '') {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const exts = ['png', 'jpg', 'jpeg', 'svg'];
+    return `<img
+      src="team-logos/${slug}.png"
+      alt="${name}"
+      class="team-logo ${cssClass}"
+      style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;flex-shrink:0"
+      onerror="(function(el){var exts=['png','jpg','jpeg','svg'];var slug='${slug}';var cur=el.src.split('.').pop();var idx=exts.indexOf(cur);if(idx<exts.length-1){el.src='team-logos/'+slug+'.'+exts[idx+1];}else{el.style.display='none';var fb=document.createElement('div');fb.className='team-card-avatar lb-avatar';fb.style.cssText='width:${sizePx}px;height:${sizePx}px;font-size:${Math.round(sizePx*0.4)}px;flex-shrink:0;display:flex;align-items:center;justify-content:center';fb.textContent='${name.charAt(0).toUpperCase()}';el.insertAdjacentElement('afterend',fb);}})(this)">`;
+  }
   function animateNum(id, target) {
     const el = document.getElementById(id);
     let current = 0;

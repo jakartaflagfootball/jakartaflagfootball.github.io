@@ -83,6 +83,19 @@
     else showTeamsList();
   });
 
+
+  // ── Team logo helper ──────────────────────────────────────────
+  function teamLogo(name, sizePx = 40, cssClass = '') {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const exts = ['png', 'jpg', 'jpeg', 'svg'];
+    return `<img
+      src="team-logos/${slug}.png"
+      alt="${name}"
+      class="team-logo ${cssClass}"
+      style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;flex-shrink:0"
+      onerror="(function(el){var exts=['png','jpg','jpeg','svg'];var slug='${slug}';var cur=el.src.split('.').pop();var idx=exts.indexOf(cur);if(idx<exts.length-1){el.src='team-logos/'+slug+'.'+exts[idx+1];}else{el.style.display='none';var fb=document.createElement('div');fb.className='team-card-avatar lb-avatar';fb.style.cssText='width:${sizePx}px;height:${sizePx}px;font-size:${Math.round(sizePx*0.4)}px;flex-shrink:0;display:flex;align-items:center;justify-content:center';fb.textContent='${name.charAt(0).toUpperCase()}';el.insertAdjacentElement('afterend',fb);}})(this)">`;
+  }
+  // ─────────────────────────────────────────────────────────────
   function showTeamsList() {
     document.getElementById('teamsListView').style.display = 'block';
     document.getElementById('teamProfileView').style.display = 'none';
@@ -136,7 +149,7 @@
         ? Math.round(stats.wins / (stats.wins + stats.losses) * 100) : 0;
       return `
         <a href="teams.html?team=${encodeURIComponent(name)}" class="team-card">
-          <div class="team-card-avatar">${name.charAt(0).toUpperCase()}</div>
+          ${teamLogo(name, 48, "team-card-logo")}
           <div class="team-card-name">${name}</div>
           <div class="team-card-stats">
             <span>${stats.wins}W – ${stats.losses}L</span>
@@ -155,7 +168,8 @@
     document.getElementById('teamProfileView').style.display = 'block';
     document.title = `${teamName} — JFF Stats`;
 
-    document.getElementById('profileName').textContent = teamName;
+    document.getElementById('profileName').innerHTML =
+      teamLogo(teamName, 64, 'profile-logo') + `<span>${teamName}</span>`;
 
     const teamStandings = standings.filter(s => s.team === teamName);
     const teamMatches = matches.filter(m => m.team1 === teamName || m.team2 === teamName);

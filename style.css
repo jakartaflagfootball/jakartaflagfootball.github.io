@@ -905,3 +905,22 @@ a { color: inherit; text-decoration: none; }
 /* ─── PLAYBOOK NAV LINK ──────────────────────── */
 .nav-playbook { color: var(--gold) !important; border-bottom-color: transparent !important; }
 .nav-playbook:hover { color: var(--accent-bright) !important; }
+/* ─── TEAM LOGOS ─────────────────────────────── */
+.team-logo {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+/* Card grid logo - sits above the name */
+.team-card { align-items: center; }
+.team-card-logo { border-radius: 8px; margin-bottom: 0.25rem; }
+
+/* Leaderboard logo */
+.lb-logo { border-radius: 4px; }
+.lb-row { display: flex; align-items: center; gap: 0.6rem; }
+
+/* Profile header logo */
+.profile-name { display: flex; align-items: center; gap: 1rem; }
+.profile-logo { border-radius: 10px; }
+
+/* Modal standings logo */
+.modal-team-logo { border-radius: 3px; }
