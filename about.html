@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — Jakarta Flag Football</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.about-hero {
+  padding: 7rem 2rem 4rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.about-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,57,43,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.about-hero-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+.about-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+}
+.about-hero h1 span { color: var(--text); display: block; }
+.about-hero-sub {
+  max-width: 600px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+.about-body { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+.section-label {
+  font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin-bottom: 0.6rem;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: 0.04em; line-height: 1; color: var(--text); margin-bottom: 1.5rem;
+}
+.divider { border: none; height: 1px; background: var(--border); margin: 4rem 0; }
+.what-is { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 4rem; }
+.what-is-text p { color: #ccc; font-size: 1rem; line-height: 1.8; margin-bottom: 1rem; }
+.what-is-text p:last-child { margin-bottom: 0; }
+.what-is-visual {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 2rem; display: flex; flex-direction: column; gap: 1.2rem;
+}
+.rule-item { display: flex; align-items: flex-start; gap: 1rem; }
+.rule-icon { font-size: 1.4rem; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.rule-text strong { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+.rule-text span { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+.timeline { position: relative; padding-left: 2rem; }
+.timeline::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: linear-gradient(to bottom, var(--accent), var(--gold), transparent);
+}
+.timeline-item { position: relative; margin-bottom: 2.5rem; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -2.45rem; top: 6px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--accent);
+}
+.timeline-item:last-child::before { background: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.timeline-year { font-family: var(--font-display); font-size: 1.4rem; color: var(--gold); letter-spacing: 0.08em; line-height: 1; margin-bottom: 0.3rem; }
+.timeline-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+.timeline-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+.community-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.community-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 1.5rem; transition: border-color 0.2s, transform 0.2s; text-decoration: none; display: block;
+}
+.community-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.community-card.gold:hover { border-color: var(--gold); }
+.community-icon { font-size: 2rem; margin-bottom: 0.75rem; line-height: 1; }
+.community-name { font-weight: 600; font-size: 0.95rem; color: var(--text); margin-bottom: 0.3rem; }
+.community-handle { font-size: 0.78rem; color: var(--accent); margin-bottom: 0.6rem; font-weight: 500; }
+.community-card.gold .community-handle { color: var(--gold); }
+.community-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+.schedule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1.5rem; }
+.schedule-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 1.5rem; display: flex; gap: 1.25rem; align-items: flex-start;
+}
+.schedule-day {
+  font-family: var(--font-display); font-size: 2.5rem; line-height: 1;
+  color: var(--accent); letter-spacing: 0.04em; flex-shrink: 0; width: 44px; text-align: center;
+}
+.schedule-card.gold .schedule-day { color: var(--gold); }
+.schedule-info strong { display: block; font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.schedule-info span { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+.join-cta {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 3rem; text-align: center; position: relative; overflow: hidden;
+}
+.join-cta::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(192,57,43,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.join-cta h2 {
+  font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: 0.04em; color: var(--text); margin-bottom: 0.75rem; line-height: 1; position: relative;
+}
+.join-cta p { color: var(--muted); margin-bottom: 2rem; font-size: 1rem; position: relative; }
+.join-cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+.social-row { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; flex-wrap: wrap; }
+.social-link {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+  border: 1px solid var(--border); border-radius: 6px; font-size: 0.82rem;
+  color: var(--muted); transition: all 0.2s; text-decoration: none;
+}
+.social-link:hover { border-color: var(--accent); color: var(--text); }
+.nav-playbook { color: var(--gold) !important; border-bottom-color: transparent !important; }
+.nav-playbook:hover { color: var(--accent-bright) !important; }
+@media (max-width: 768px) {
+  .what-is { grid-template-columns: 1fr; gap: 2rem; }
+  .community-grid { grid-template-columns: 1fr 1fr; }
+  .schedule-grid { grid-template-columns: 1fr; }
+  .join-cta { padding: 2rem 1.5rem; }
+  .about-body { padding: 0 1.25rem 5rem; }
+}
+@media (max-width: 480px) {
+  .nav-logo-text { display: none; }
+  .nav-links { display: none; }
+  body { padding-bottom: 64px; }
+  .bottom-tab-bar {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    height: 64px; background: rgba(14,14,14,0.97);
+    border-top: 1px solid var(--border); z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; color: var(--muted); font-size: 0.6rem;
+    letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500;
+    text-decoration: none; transition: color 0.2s;
+  }
+  .tab-item .tab-icon { font-size: 1.25rem; line-height: 1; }
+  .tab-item.active { color: var(--accent); }
+  .tab-item.playbook { color: var(--gold); }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">Jakarta Flag Football<span>Stats Hub</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+    <a href="about.html" class="active">About</a>
+    <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
+  </div>
+</nav>
+
+<div class="about-hero">
+  <div class="about-hero-label">Jakarta Flag Football · The Home of Indonesian Flag Football</div>
+  <h1>JAKARTA'S<span>FLAG FOOTBALL</span>SCENE</h1>
+  <p class="about-hero-sub">
+    The biggest flag football community in Jakarta — where athletes of all levels come to compete, learn, and grow the sport in Indonesia.
+  </p>
+</div>
+
+<div class="about-body">
+
+  <div class="section-label">The Game</div>
+  <div class="section-title">WHAT IS FLAG FOOTBALL?</div>
+
+  <div class="what-is">
+    <div class="what-is-text">
+      <p>Flag football is a non-contact version of American football where instead of tackling, defenders must pull a flag from the ball carrier's belt to end a play. All the strategy, speed, and excitement of the NFL — without the pads.</p>
+      <p>The sport is fast-growing globally and set to debut at the <strong style="color: var(--gold);">2028 Los Angeles Olympics</strong> as an official event — making this the best time ever to get into flag football.</p>
+      <p>In Jakarta, we play 5v5 and 8v8 formats on turf fields, with organized league play, named tournaments, and open scrimmages available for all levels — including women's and youth programs.</p>
+    </div>
+    <div class="what-is-visual">
+      <div class="rule-item">
+        <div class="rule-icon">🚩</div>
+        <div class="rule-text"><strong>Pull the Flag</strong><span>Defenders pull a flag belt from the ball carrier instead of tackling. No contact required.</span></div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">🏈</div>
+        <div class="rule-text"><strong>All the Strategy</strong><span>Routes, blitzes, play-action — real NFL concepts in a fast, open format.</span></div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">⚡</div>
+        <div class="rule-text"><strong>Fast & Inclusive</strong><span>Games run 40 minutes. Any fitness level, any gender, any background — all welcome.</span></div>
+      </div>
+      <div class="rule-item">
+        <div class="rule-icon">🥇</div>
+        <div class="rule-text"><strong>Olympic Sport in 2028</strong><span>Flag football joins the LA28 Olympics. Indonesia is already competing internationally.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-label">Our Story</div>
+  <div class="section-title">JFF HISTORY</div>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-year">EARLY DAYS</div>
+      <div class="timeline-title">The Community Begins</div>
+      <div class="timeline-desc">A small group of flag football enthusiasts starts gathering in Jakarta for Saturday morning games and Wednesday night scrimmages — open to all nationalities and skill levels.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2021</div>
+      <div class="timeline-title">Post-COVID Return & Mini League</div>
+      <div class="timeline-desc">After the pandemic pause, JFF returns with the first Jakarta Flag Football Mini League at Aldiron Soccer Field in Pancoran. CFT Jakarta vs Eagles Jakarta opens the tournament era, marking the start of formal organized competition.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2022–23</div>
+      <div class="timeline-title">League Expansion & Women's Division</div>
+      <div class="timeline-desc">The community grows rapidly. More teams form, tournaments multiply, and the women's division expands under WFF Jakarta. Named tournaments become regular fixtures, and the ecosystem starts producing national-level talent.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2024–25</div>
+      <div class="timeline-title">Biggest Flag Football Community in Jakarta</div>
+      <div class="timeline-desc">JFF reaches 7,800+ Instagram followers with dozens of active teams across men's, women's, and youth divisions. Tournaments including Merdeka Bowl draw competitors from across Indonesia. This Stats Hub launches to document it all.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2028</div>
+      <div class="timeline-title">The Olympic Goal 🥇</div>
+      <div class="timeline-desc">With flag football joining the 2028 Los Angeles Olympics, JFF players and alumni have the chance to represent Indonesia on the biggest stage in sports. The road to LA28 starts here — on Saturday mornings in Jakarta.</div>
+    </div>
+  </div>
+
+
+  <hr class="divider">
+
+  <div class="section-label">The Ecosystem</div>
+  <div class="section-title">OUR COMMUNITY</div>
+  <p style="color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem;">More than just a sport. JFF is a community built on competition, inclusion, and the love of the game.</p>
+
+  <div class="community-grid">
+    <a href="https://www.instagram.com/jakartaflagfootball/" target="_blank" class="community-card">
+      <div class="community-icon">🏈</div>
+      <div class="community-name">JFF Main</div>
+      <div class="community-handle">@jakartaflagfootball</div>
+      <div class="community-desc">The core league. Men's & co-ed competition, tournaments, and the largest flag football community in Jakarta with 7,800+ followers.</div>
+    </a>
+    <a href="https://www.instagram.com/wffjakarta/" target="_blank" class="community-card">
+      <div class="community-icon">🏃‍♀️</div>
+      <div class="community-name">WFF Jakarta</div>
+      <div class="community-handle">@wffjakarta</div>
+      <div class="community-desc">Women's Flag Football Jakarta. Weekly scrimmages, community events, and the home of the Jakarta Foxes regional team.</div>
+    </a>
+    <a href="https://www.instagram.com/jakartafoxes/" target="_blank" class="community-card gold">
+      <div class="community-icon">🦊</div>
+      <div class="community-name">Jakarta Foxes</div>
+      <div class="community-handle">@jakartafoxes</div>
+      <div class="community-desc">Jakarta's women's representative team competing at regional and national tournaments including Merdeka Bowl.</div>
+    </a>
+    <a href="https://www.instagram.com/ducksffschool/" target="_blank" class="community-card">
+      <div class="community-icon">🦆</div>
+      <div class="community-name">Ducks FF School</div>
+      <div class="community-handle">@ducksffschool</div>
+      <div class="community-desc">Youth flag football development program. Building the next generation of Indonesian flag football players from the ground up.</div>
+    </a>
+    <a href="https://www.instagram.com/inaflagfb/" target="_blank" class="community-card gold">
+      <div class="community-icon">🇮🇩</div>
+      <div class="community-name">Indonesia National Team</div>
+      <div class="community-handle">@inaflagfb</div>
+      <div class="community-desc">The national team draws from the JFF community. Part of NOC Indonesia, competing internationally toward the 2028 Olympics.</div>
+    </a>
+    <a href="https://www.instagram.com/aafi_indonesia/" target="_blank" class="community-card">
+      <div class="community-icon">🏛️</div>
+      <div class="community-name">AAFI</div>
+      <div class="community-handle">@aafi_indonesia</div>
+      <div class="community-desc">Asosiasi American Football Indonesia — the national federation overseeing flag football across the entire country.</div>
+    </a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="join-cta">
+    <h2>NEVER PLAYED?<br>WE'LL TEACH YOU.</h2>
+    <p>No experience needed. Join us on Reclub to sign up for your first session.</p>
+    <div class="join-cta-btns">
+      <a href="https://reclub.co/clubs/@jakarta-flag-football-jakarta-indonesia-975/" target="_blank" class="btn-primary">Join on Reclub</a>
+      <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="btn-secondary">Make a Playbook</a>
+    </div>
+    <div class="social-row">
+      <a href="https://www.instagram.com/jakartaflagfootball/" target="_blank" class="social-link">📸 @jakartaflagfootball</a>
+      <a href="https://www.youtube.com/@jakartaflagfootball4495" target="_blank" class="social-link">▶️ YouTube</a>
+      <a href="https://open.spotify.com/show/jakartaflagfootball" target="_blank" class="social-link">🎧 Spotify Podcast</a>
+      <a href="index.html" class="social-link">📊 Stats Hub</a>
+      <a href="teams.html" class="social-link">🛡️ Teams</a>
+      <a href="players.html" class="social-link">🏃 Players</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Tab Bar (mobile only) -->
+<nav class="bottom-tab-bar">
+  <a href="index.html" class="tab-item">
+    <span class="tab-icon">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="tournaments.html" class="tab-item">
+    <span class="tab-icon">🏆</span>
+    <span>Tournaments</span>
+  </a>
+  <a href="teams.html" class="tab-item">
+    <span class="tab-icon">🛡️</span>
+    <span>Teams</span>
+  </a>
+  <a href="players.html" class="tab-item">
+    <span class="tab-icon">🏃</span>
+    <span>Players</span>
+  </a>
+  <a href="about.html" class="tab-item active">
+    <span class="tab-icon">ℹ️</span>
+    <span>About</span>
+  </a>
+</nav>
+
+</body>
+</html>
