@@ -51,6 +51,9 @@
 <!-- Teams List View -->
 <div id="teamsListView">
   <div class="page-header">
+    <div class="page-header-photo">
+      <img src="photo-assets/@PAULUSARDE-4021.jpg" alt="JFF Teams" data-parallax="0.25">
+    </div>
     <div class="container">
       <h1 class="page-title">Teams</h1>
       <p class="page-sub">Click any team to see their full history</p>
@@ -271,6 +274,35 @@
         </div>`;
     }).join('') || '<p class="empty">No match results found.</p>';
   }
+</script>
+
+<script>
+(function() {
+  var imgs = document.querySelectorAll('[data-parallax]');
+  if (!imgs.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function update() {
+    imgs.forEach(function(img) {
+      var wrap = img.parentElement;
+      var rect = wrap.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      // Skip page header photos on mobile (handled by CSS alone)
+      if (window.innerWidth <= 768 && wrap.classList.contains("page-header-photo")) {
+        img.style.transform = "";
+        return;
+      }
+      var factor = parseFloat(img.dataset.parallax) || 0.3;
+      var isTopEl = wrap.classList.contains('page-header-photo') || wrap.classList.contains('about-hero-photo');
+      var raw = isTopEl
+        ? rect.top * factor
+        : (rect.top + rect.height / 2 - window.innerHeight / 2) * factor;
+      var maxSafe = wrap.offsetHeight * 0.17;
+      var offset = Math.max(-maxSafe, Math.min(maxSafe, raw));
+      img.style.transform = 'translateY(' + offset + 'px)';
+    });
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();
 </script>
 
 <!-- Bottom Tab Bar (mobile only) -->

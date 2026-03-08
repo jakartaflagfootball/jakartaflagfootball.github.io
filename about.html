@@ -10,7 +10,7 @@
 <style>
 .about-hero {
   padding: 7rem 2rem 4rem;
-  text-align: center;
+  text-align: left;
   position: relative;
   overflow: hidden;
 }
@@ -40,7 +40,6 @@
 .about-hero h1 span { color: var(--text); display: block; }
 .about-hero-sub {
   max-width: 600px;
-  margin: 0 auto;
   color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.7;
@@ -177,11 +176,16 @@
 </nav>
 
 <div class="about-hero">
-  <div class="about-hero-label">Jakarta Flag Football · The Home of Indonesian Flag Football</div>
-  <h1>JAKARTA'S<span>FLAG FOOTBALL</span>SCENE</h1>
-  <p class="about-hero-sub">
-    The biggest flag football community in Jakarta — where athletes of all levels come to compete, learn, and grow the sport in Indonesia.
-  </p>
+  <div class="about-hero-photo">
+    <img src="photo-assets/@PAULUSARDE%20%282062%20of%202493%29.jpg" alt="JFF community celebration" data-parallax="0.2">
+  </div>
+  <div class="about-hero-text">
+    <div class="about-hero-label">Jakarta Flag Football · The Home of Indonesian Flag Football</div>
+    <h1>JAKARTA'S<span>FLAG FOOTBALL</span>SCENE</h1>
+    <p class="about-hero-sub">
+      The biggest flag football community in Jakarta — where athletes of all levels come to compete, learn, and grow the sport in Indonesia.
+    </p>
+  </div>
 </div>
 
 <div class="about-body">
@@ -195,23 +199,8 @@
       <p>The sport is fast-growing globally and set to debut at the <strong style="color: var(--gold);">2028 Los Angeles Olympics</strong> as an official event — making this the best time ever to get into flag football.</p>
       <p>In Jakarta, we play 5v5 and 8v8 formats on turf fields, with organized league play, named tournaments, and open scrimmages available for all levels — including women's and youth programs.</p>
     </div>
-    <div class="what-is-visual">
-      <div class="rule-item">
-        <div class="rule-icon">🚩</div>
-        <div class="rule-text"><strong>Pull the Flag</strong><span>Defenders pull a flag belt from the ball carrier instead of tackling. No contact required.</span></div>
-      </div>
-      <div class="rule-item">
-        <div class="rule-icon">🏈</div>
-        <div class="rule-text"><strong>All the Strategy</strong><span>Routes, blitzes, play-action — real NFL concepts in a fast, open format.</span></div>
-      </div>
-      <div class="rule-item">
-        <div class="rule-icon">⚡</div>
-        <div class="rule-text"><strong>Fast & Inclusive</strong><span>Games run 40 minutes. Any fitness level, any gender, any background — all welcome.</span></div>
-      </div>
-      <div class="rule-item">
-        <div class="rule-icon">🥇</div>
-        <div class="rule-text"><strong>Olympic Sport in 2028</strong><span>Flag football joins the LA28 Olympics. Indonesia is already competing internationally.</span></div>
-      </div>
+    <div class="about-action-photo">
+      <img src="photo-assets/@PAULUSARDE%20%281302%20of%204098%29.jpg" alt="Flag football — diving catch" data-parallax="0.25">
     </div>
   </div>
 
@@ -296,6 +285,16 @@
 
   <hr class="divider">
 
+  <div class="women-photo-strip">
+    <img src="photo-assets/rrshutterspeed-323.jpg" alt="Women's Flag Football Jakarta" data-parallax="0.3">
+    <div class="women-photo-strip-overlay">
+      <div class="women-photo-strip-text">
+        <div class="strip-label">Women's Division · WFF Jakarta</div>
+        <div class="strip-headline">EVERY LEVEL.<br>EVERY BACKGROUND.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="join-cta">
     <h2>NEVER PLAYED?<br>WE'LL TEACH YOU.</h2>
     <p>No experience needed. Join us on Reclub to sign up for your first session.</p>
@@ -314,6 +313,35 @@
   </div>
 
 </div>
+
+<script>
+(function() {
+  var imgs = document.querySelectorAll('[data-parallax]');
+  if (!imgs.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function update() {
+    imgs.forEach(function(img) {
+      var wrap = img.parentElement;
+      var rect = wrap.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      // Skip page header photos on mobile (handled by CSS alone)
+      if (window.innerWidth <= 768 && wrap.classList.contains("page-header-photo")) {
+        img.style.transform = "";
+        return;
+      }
+      var factor = parseFloat(img.dataset.parallax) || 0.3;
+      var isTopEl = wrap.classList.contains('page-header-photo') || wrap.classList.contains('about-hero-photo');
+      var raw = isTopEl
+        ? rect.top * factor
+        : (rect.top + rect.height / 2 - window.innerHeight / 2) * factor;
+      var maxSafe = wrap.offsetHeight * 0.17;
+      var offset = Math.max(-maxSafe, Math.min(maxSafe, raw));
+      img.style.transform = 'translateY(' + offset + 'px)';
+    });
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();
+</script>
 
 <!-- Bottom Tab Bar (mobile only) -->
 <nav class="bottom-tab-bar">

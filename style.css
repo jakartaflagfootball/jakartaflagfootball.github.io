@@ -114,7 +114,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .hero-content {
-  position: relative; z-index: 1;
+  position: relative; z-index: 2;
   padding: 0 2rem;
   max-width: 1100px; margin: 0 auto;
   width: 100%;
@@ -900,6 +900,288 @@ a { color: inherit; text-decoration: none; }
 
   /* Hero */
   .hero-title { font-size: clamp(3.5rem, 18vw, 5rem); }
+}
+
+/* ─── HERO PHOTO PANEL ───────────────────────── */
+.hero-photo-panel {
+  position: absolute;
+  right: 6px; /* account for red stripe */
+  top: 0;
+  bottom: 0;
+  width: 46%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-photo-panel img {
+  position: absolute;
+  top: -1%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 140%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+  will-change: transform;
+}
+
+.hero-photo-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, var(--bg) 0%, rgba(14,14,14,0.55) 30%, transparent 58%);
+  z-index: 1;
+}
+
+.hero-photo-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--bg) 0%, transparent 25%);
+  z-index: 1;
+}
+
+@media (max-width: 900px) {
+  .hero-photo-panel {
+    display: block;
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+  .hero-photo-panel::before {
+    background: rgba(14,14,14,0.82);
+  }
+}
+
+/* ─── PHOTO STRIP ────────────────────────────── */
+.photo-strip {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+}
+
+.photo-strip-img {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 140%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+  will-change: transform;
+}
+
+.photo-strip-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(14,14,14,0.7) 0%, rgba(14,14,14,0.2) 50%, rgba(14,14,14,0.55) 100%),
+    linear-gradient(to top, rgba(14,14,14,0.85) 0%, transparent 35%),
+    linear-gradient(to bottom, rgba(14,14,14,0.85) 0%, transparent 35%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-strip-inner {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.photo-strip-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.photo-strip-headline {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  letter-spacing: 0.05em;
+  color: var(--text);
+  line-height: 1;
+}
+
+.photo-strip-headline span {
+  color: var(--text);
+}
+
+/* ─── ABOUT HERO PHOTO ───────────────────────── */
+.about-hero-photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.about-hero-photo img {
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 140%;
+  object-fit: cover;
+  object-position: center -10%;
+  display: block;
+  will-change: transform;
+}
+
+.about-hero-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, var(--bg) 0%, rgba(14,14,14,0.6) 28%, transparent 60%),
+    linear-gradient(to top, var(--bg) 0%, transparent 28%),
+    linear-gradient(to bottom, rgba(14,14,14,0.7) 0%, transparent 40%);
+}
+
+.about-hero > *:not(.about-hero-photo) {
+  position: relative;
+  z-index: 1;
+}
+
+.about-hero-text {
+  display: block;
+  max-width: 720px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── PAGE HEADER PHOTO ──────────────────────── */
+.page-header-photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.page-header-photo img {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 140%;
+  object-fit: cover;
+  object-position: center 27%;
+  display: block;
+  will-change: transform;
+}
+
+.page-header-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, var(--bg) 0%, rgba(14,14,14,0.6) 30%, transparent 65%),
+    linear-gradient(to top, var(--bg) 0%, transparent 30%),
+    linear-gradient(to bottom, rgba(14,14,14,0.8) 0%, transparent 45%);
+}
+
+.page-header > *:not(.page-header-photo) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .page-header-photo img {
+    top: 0;
+    height: 100%;
+    object-position: center top;
+  }
+  .page-header-photo::after {
+    background: rgba(14,14,14,0.82);
+  }
+  .about-hero-photo::after {
+    background: rgba(14,14,14,0.82);
+  }
+}
+
+/* ─── ABOUT ACTION PHOTO ─────────────────────── */
+.about-action-photo {
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  aspect-ratio: 4/3;
+}
+
+.about-action-photo img {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 140%;
+  object-fit: cover;
+  object-position: 60% center;
+  display: block;
+  will-change: transform;
+}
+
+.about-action-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(14,14,14,0.65) 0%, transparent 45%);
+}
+
+/* ─── WOMEN'S PHOTO STRIP ────────────────────── */
+.women-photo-strip {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  border-radius: 10px;
+  margin-bottom: 4rem;
+}
+
+.women-photo-strip img {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 140%;
+  object-fit: cover;
+  object-position: center 40%;
+  display: block;
+  will-change: transform;
+}
+
+.women-photo-strip-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(14,14,14,0.75) 0%, transparent 50%),
+    linear-gradient(to top, rgba(14,14,14,0.6) 0%, transparent 40%);
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+}
+
+.women-photo-strip-text .strip-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.women-photo-strip-text .strip-headline {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1;
 }
 
 /* ─── PLAYBOOK NAV LINK ──────────────────────── */

@@ -37,6 +37,9 @@
       <a href="teams.html" class="btn-secondary">Team Profiles</a>
     </div>
   </div>
+  <div class="hero-photo-panel">
+    <img src="photo-assets/@PAULUSARDE%20%283408%20of%204098%29.jpg" alt="Flag football action" data-parallax="0.25">
+  </div>
 </header>
 
 <section class="stats-bar">
@@ -77,6 +80,16 @@
     </div>
   </div>
 </section>
+
+<div class="photo-strip">
+  <img src="photo-assets/@PAULUSARDE-8956.jpg" alt="JFF — Jakarta Flag Football" class="photo-strip-img" data-parallax="0.3">
+  <div class="photo-strip-overlay">
+    <div class="photo-strip-inner">
+      <div class="photo-strip-label">Jakarta · Rain or Shine</div>
+      <div class="photo-strip-headline">WE <span>PLAY</span></div>
+    </div>
+  </div>
+</div>
 
 <section class="section section-dark">
   <div class="container">
@@ -176,6 +189,35 @@
       if (current >= target) clearInterval(timer);
     }, 40);
   }
+</script>
+
+<script>
+(function() {
+  var imgs = document.querySelectorAll('[data-parallax]');
+  if (!imgs.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function update() {
+    imgs.forEach(function(img) {
+      var wrap = img.parentElement;
+      var rect = wrap.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      // Skip page header photos on mobile (handled by CSS alone)
+      if (window.innerWidth <= 768 && wrap.classList.contains("page-header-photo")) {
+        img.style.transform = "";
+        return;
+      }
+      var factor = parseFloat(img.dataset.parallax) || 0.3;
+      var isTopEl = wrap.classList.contains('page-header-photo') || wrap.classList.contains('about-hero-photo');
+      var raw = isTopEl
+        ? rect.top * factor
+        : (rect.top + rect.height / 2 - window.innerHeight / 2) * factor;
+      var maxSafe = wrap.offsetHeight * 0.17;
+      var offset = Math.max(-maxSafe, Math.min(maxSafe, raw));
+      img.style.transform = 'translateY(' + offset + 'px)';
+    });
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();
 </script>
 
 <!-- Bottom Tab Bar (mobile only) -->
