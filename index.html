@@ -26,10 +26,10 @@
   </a>
   <div class="nav-links">
     <a href="index.html" class="active">Home</a>
-    <a href="tournaments.html">Tournaments</a>
     <a href="teams.html">Teams</a>
     <a href="players.html">Players</a>
-    <!-- <a href="gallery.html">Gallery</a> -->
+    <a href="tournaments.html">Tournaments</a>
+    <a href="gallery.html">Gallery</a>
     <a href="about.html">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
   </div>
@@ -47,10 +47,10 @@
   </div>
   <nav class="nav-drawer-links" id="navDrawerLinks">
     <a href="index.html">Home</a>
-    <a href="tournaments.html">Tournaments</a>
     <a href="teams.html">Teams</a>
     <a href="players.html">Players</a>
-    <!-- <a href="gallery.html">Gallery</a> -->
+    <a href="tournaments.html">Tournaments</a>
+    <a href="gallery.html">Gallery</a>
     <a href="about.html">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
   </nav>
@@ -70,7 +70,7 @@
     </div>
   </div>
   <div class="hero-photo-panel">
-    <img src="photo-assets/@PAULUSARDE%20%283408%20of%204098%29.jpg" alt="Flag football action" data-parallax="0.25">
+    <img src="photo-assets/2025/Open%20SZN%203/@PAULUSARDE%20%283408%20of%204098%29.jpg" alt="Flag football action" data-parallax="0.25">
   </div>
 </header>
 
@@ -114,12 +114,29 @@
 </section>
 
 <div class="photo-strip">
-  <img src="photo-assets/@PAULUSARDE-8956.jpg" alt="JFF — Jakarta Flag Football" class="photo-strip-img" data-parallax="0.3">
-  <div class="photo-strip-overlay">
-    <div class="photo-strip-inner">
-      <div class="photo-strip-label">Jakarta · Rain or Shine</div>
-      <div class="photo-strip-headline">WE <span>PLAY</span></div>
+  <div class="photo-strip-track" id="photoStripTrack">
+    <div class="photo-strip-slide">
+      <img src="photo-assets/2025/Open SZN 3/@PAULUSARDE-8956.jpg" alt="JFF — Jakarta Flag Football" class="photo-strip-img">
+      <div class="photo-strip-overlay">
+        <div class="photo-strip-inner">
+          <div class="photo-strip-label">Jakarta · Rain or Shine</div>
+          <div class="photo-strip-headline">WE <span>PLAY</span></div>
+        </div>
+      </div>
     </div>
+    <div class="photo-strip-slide">
+      <img src="photo-assets/2025/WFF/rrshutterspeed-323.jpg" alt="JFF — Women's Division Jakarta" class="photo-strip-img">
+      <div class="photo-strip-overlay">
+        <div class="photo-strip-inner">
+          <div class="photo-strip-label">Women's Division · WFF Jakarta</div>
+          <div class="photo-strip-headline">EVERY LEVEL.<br><span>EVERY BACKGROUND.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="photo-strip-dots" id="photoStripDots">
+    <button class="dot active" data-index="0"></button>
+    <button class="dot" data-index="1"></button>
   </div>
 </div>
 
@@ -250,6 +267,21 @@
   window.addEventListener('scroll', update, { passive: true });
   update();
 })();
+
+(function() {
+  var track = document.getElementById('photoStripTrack');
+  var dots = document.querySelectorAll('#photoStripDots .dot');
+  if (!track || !dots.length) return;
+  track.addEventListener('scroll', function() {
+    var index = Math.round(track.scrollLeft / track.offsetWidth);
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === index); });
+  }, { passive: true });
+  dots.forEach(function(dot, i) {
+    dot.addEventListener('click', function() {
+      track.scrollTo({ left: i * track.offsetWidth, behavior: 'smooth' });
+    });
+  });
+})();
 </script>
 
 <!-- Bottom Tab Bar (mobile only) -->
@@ -257,10 +289,6 @@
   <a href="index.html" class="tab-item active">
     <span class="tab-icon">🏠</span>
     <span>Home</span>
-  </a>
-  <a href="tournaments.html" class="tab-item">
-    <span class="tab-icon">🏆</span>
-    <span>Tournaments</span>
   </a>
   <a href="teams.html" class="tab-item">
     <span class="tab-icon">🛡️</span>
@@ -270,9 +298,13 @@
     <span class="tab-icon">🏃</span>
     <span>Players</span>
   </a>
-  <a href="about.html" class="tab-item">
-    <span class="tab-icon">ℹ️</span>
-    <span>About</span>
+  <a href="tournaments.html" class="tab-item">
+    <span class="tab-icon">🏆</span>
+    <span>Tournaments</span>
+  </a>
+  <a href="gallery.html" class="tab-item">
+    <span class="tab-icon">📷</span>
+    <span>Gallery</span>
   </a>
 </nav>
 

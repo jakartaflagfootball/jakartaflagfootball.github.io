@@ -339,9 +339,9 @@
   </a>
   <div class="nav-links">
     <a href="index.html">Home</a>
-    <a href="tournaments.html">Tournaments</a>
     <a href="teams.html">Teams</a>
     <a href="players.html">Players</a>
+    <a href="tournaments.html">Tournaments</a>
     <a href="gallery.html" class="active">Gallery</a>
     <a href="about.html">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
@@ -360,9 +360,9 @@
   </div>
   <nav class="nav-drawer-links" id="navDrawerLinks">
     <a href="index.html">Home</a>
-    <a href="tournaments.html">Tournaments</a>
     <a href="teams.html">Teams</a>
     <a href="players.html">Players</a>
+    <a href="tournaments.html">Tournaments</a>
     <a href="gallery.html">Gallery</a>
     <a href="about.html">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
@@ -424,10 +424,6 @@
     <span class="tab-icon">🏠</span>
     <span>Home</span>
   </a>
-  <a href="tournaments.html" class="tab-item">
-    <span class="tab-icon">🏆</span>
-    <span>Tournaments</span>
-  </a>
   <a href="teams.html" class="tab-item">
     <span class="tab-icon">🛡️</span>
     <span>Teams</span>
@@ -436,9 +432,13 @@
     <span class="tab-icon">🏃</span>
     <span>Players</span>
   </a>
-  <a href="about.html" class="tab-item">
-    <span class="tab-icon">ℹ️</span>
-    <span>About</span>
+  <a href="tournaments.html" class="tab-item">
+    <span class="tab-icon">🏆</span>
+    <span>Tournaments</span>
+  </a>
+  <a href="gallery.html" class="tab-item active">
+    <span class="tab-icon">📷</span>
+    <span>Gallery</span>
   </a>
 </nav>
 
@@ -476,7 +476,7 @@
       const cur = getCurrent();
       container.querySelectorAll('.filter-pill').forEach((b, i) => {
         if (i === 0) b.classList.toggle('active', cur === null);
-        else b.classList.toggle('active', b.dataset.val === cur);
+        else b.classList.toggle('active', b.dataset.val === String(cur));
       });
     };
   }
@@ -508,7 +508,7 @@
     } else {
       pool = window.PHOTOS.filter(p => {
         const yearOk = activeYear === null || p.year === activeYear;
-        const eventOk = activeEvent === null || p.event === activeEvent;
+        const eventOk = activeEvent === null || (Array.isArray(p.event) ? p.event.includes(activeEvent) : p.event === activeEvent);
         return yearOk && eventOk;
       });
     }
@@ -549,7 +549,7 @@
           <img src="${p.src}" alt="${p.title}">
           <div class="count-badge">${num}</div>
           <div class="acc-overlay">
-            <div class="acc-tag">${p.event}${p.eventSub ? ' · ' + p.eventSub : ''}</div>
+            <div class="acc-tag">${(Array.isArray(p.event) ? p.event.join(' · ') : p.event)}${p.eventSub ? ' · ' + p.eventSub : ''}</div>
             <div class="acc-title">${p.title}</div>
           </div>`;
         row.appendChild(cell);
@@ -604,7 +604,7 @@
     const p = displayedPhotos[current];
     document.getElementById('lb-img').src = p.src;
     document.getElementById('lb-title').textContent = p.title;
-    document.getElementById('lb-tag').textContent = p.event + (p.eventSub ? ' · ' + p.eventSub : '');
+    document.getElementById('lb-tag').textContent = (Array.isArray(p.event) ? p.event.join(' · ') : p.event) + (p.eventSub ? ' · ' + p.eventSub : '');
     document.getElementById('lb-counter').textContent = `${current + 1} / ${displayedPhotos.length}`;
   }
 
@@ -631,7 +631,7 @@
   // ── Init ───────────────────────────────────────────────────
 
   const years = uniqueSorted(window.PHOTOS.map(p => p.year));
-  const events = [...new Set(window.PHOTOS.map(p => p.event))]; // preserve insertion order
+  const events = [...new Set(window.PHOTOS.flatMap(p => Array.isArray(p.event) ? p.event : [p.event]).filter(Boolean))]; // preserve insertion order
 
   buildPills('yearPills', years, () => activeYear, v => { activeYear = v; });
   buildPills('eventPills', events, () => activeEvent, v => { activeEvent = v; });

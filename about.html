@@ -142,27 +142,12 @@
   .community-grid { grid-template-columns: 1fr 1fr; }
   .schedule-grid { grid-template-columns: 1fr; }
   .join-cta { padding: 2rem 1.5rem; }
-  .about-body { padding: 0 1.25rem 5rem; }
+  .about-body { padding: 3rem 1.25rem 5rem; }
 }
 @media (max-width: 480px) {
   .nav-logo-text { display: none; }
   .nav-links { display: none; }
-  body { padding-bottom: 64px; }
-  .bottom-tab-bar {
-    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-    height: 64px; background: rgba(14,14,14,0.97);
-    border-top: 1px solid var(--border); z-index: 200;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .tab-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 3px; color: var(--muted); font-size: 0.6rem;
-    letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500;
-    text-decoration: none; transition: color 0.2s;
-  }
-  .tab-item .tab-icon { font-size: 1.25rem; line-height: 1; }
-  .tab-item.active { color: var(--accent); }
-  .tab-item.playbook { color: var(--gold); }
+  .bottom-tab-bar { display: none; }
 }
 </style>
 <link rel="icon" type="image/png" href="jff-logo.png">
@@ -176,10 +161,10 @@
   </a>
   <div class="nav-links">
     <a href="index.html">Home</a>
-    <a href="tournaments.html">Tournaments</a>
     <a href="teams.html">Teams</a>
     <a href="players.html">Players</a>
-    <!-- <a href="gallery.html">Gallery</a> -->
+    <a href="tournaments.html">Tournaments</a>
+    <a href="gallery.html">Gallery</a>
     <a href="about.html" class="active">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
   </div>
@@ -197,10 +182,10 @@
   </div>
   <nav class="nav-drawer-links" id="navDrawerLinks">
     <a href="index.html">Home</a>
-    <a href="tournaments.html">Tournaments</a>
     <a href="teams.html">Teams</a>
     <a href="players.html">Players</a>
-    <!-- <a href="gallery.html">Gallery</a> -->
+    <a href="tournaments.html">Tournaments</a>
+    <a href="gallery.html">Gallery</a>
     <a href="about.html">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
   </nav>
@@ -245,12 +230,12 @@
     <div class="timeline-item">
       <div class="timeline-year">EARLY DAYS</div>
       <div class="timeline-title">The Community Begins</div>
-      <div class="timeline-desc">A small group of flag football enthusiasts starts gathering in Jakarta for Saturday morning games and Wednesday night scrimmages — open to all nationalities and skill levels.</div>
+      <div class="timeline-desc">A small group of flag football enthusiasts starts gathering in Jakarta for drills and scrimmages — open to all nationalities and skill levels.</div>
     </div>
     <div class="timeline-item">
       <div class="timeline-year">2021</div>
       <div class="timeline-title">Post-COVID Return & Mini League</div>
-      <div class="timeline-desc">After the pandemic pause, JFF returns with the first Jakarta Flag Football Mini League at Aldiron Soccer Field in Pancoran. CFT Jakarta vs Eagles Jakarta opens the tournament era, marking the start of formal organized competition.</div>
+      <div class="timeline-desc">After the pandemic pause, JFF starts competitions with the first Jakarta Flag Football Mini League at Aldiron Soccer Field in Pancoran. CFT Jakarta vs Eagles Jakarta opens the tournament era, marking the start of formal organized competition.</div>
     </div>
     <div class="timeline-item">
       <div class="timeline-year">2022–23</div>
@@ -260,7 +245,7 @@
     <div class="timeline-item">
       <div class="timeline-year">2024–25</div>
       <div class="timeline-title">Biggest Flag Football Community in Jakarta</div>
-      <div class="timeline-desc">JFF reaches 7,800+ Instagram followers with dozens of active teams across men's, women's, and youth divisions. Tournaments including Merdeka Bowl draw competitors from across Indonesia. This Stats Hub launches to document it all.</div>
+      <div class="timeline-desc">JFF reaches 7,800+ Instagram followers with dozens of active teams across men's and women's divisions. Tournaments including Open SZN and Devzone draw competitors from across Southeast Asia. This Stats Hub launches to document it all.</div>
     </div>
     <div class="timeline-item">
       <div class="timeline-year">2028</div>
@@ -281,7 +266,7 @@
       <div class="community-icon">🏈</div>
       <div class="community-name">JFF Main</div>
       <div class="community-handle">@jakartaflagfootball</div>
-      <div class="community-desc">The core league. Men's & co-ed competition, tournaments, and the largest flag football community in Jakarta with 7,800+ followers.</div>
+      <div class="community-desc">The core community. Tournaments, training, and the largest flag football community in Indonesia with 7,800+ followers.</div>
     </a>
     <a href="https://www.instagram.com/wffjakarta/" target="_blank" class="community-card">
       <div class="community-icon">🏃‍♀️</div>
@@ -317,16 +302,6 @@
 
   <hr class="divider">
 
-  <div class="women-photo-strip">
-    <img src="photo-assets/rrshutterspeed-323.jpg" alt="Women's Flag Football Jakarta" data-parallax="0.3">
-    <div class="women-photo-strip-overlay">
-      <div class="women-photo-strip-text">
-        <div class="strip-label">Women's Division · WFF Jakarta</div>
-        <div class="strip-headline">EVERY LEVEL.<br>EVERY BACKGROUND.</div>
-      </div>
-    </div>
-  </div>
-
   <div class="join-cta">
     <h2>NEVER PLAYED?<br>WE'LL TEACH YOU.</h2>
     <p>No experience needed. Join us on Reclub to sign up for your first session.</p>
@@ -347,11 +322,11 @@
         </svg>
         YouTube
       </a>
-      <a href="https://open.spotify.com/show/jakartaflagfootball" target="_blank" class="social-link">
+      <a href="https://open.spotify.com/show/0vfDxDzoOXMnZEYBrcKVQH" target="_blank" class="social-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;color:#1DB954">
           <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
         </svg>
-        Spotify Podcast
+        Audible Podcast
       </a>
     </div>
   </div>
@@ -387,29 +362,6 @@
 })();
 </script>
 
-<!-- Bottom Tab Bar (mobile only) -->
-<nav class="bottom-tab-bar">
-  <a href="index.html" class="tab-item">
-    <span class="tab-icon">🏠</span>
-    <span>Home</span>
-  </a>
-  <a href="tournaments.html" class="tab-item">
-    <span class="tab-icon">🏆</span>
-    <span>Tournaments</span>
-  </a>
-  <a href="teams.html" class="tab-item">
-    <span class="tab-icon">🛡️</span>
-    <span>Teams</span>
-  </a>
-  <a href="players.html" class="tab-item">
-    <span class="tab-icon">🏃</span>
-    <span>Players</span>
-  </a>
-  <a href="about.html" class="tab-item active">
-    <span class="tab-icon">ℹ️</span>
-    <span>About</span>
-  </a>
-</nav>
 
 
 <script>
