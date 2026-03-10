@@ -29,10 +29,33 @@
     <a href="tournaments.html">Tournaments</a>
     <a href="teams.html" class="active">Teams</a>
     <a href="players.html">Players</a>
+    <!-- <a href="gallery.html">Gallery</a> -->
     <a href="about.html">About</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
   </div>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-header">
+    <div class="nav-drawer-logo">
+      <img src="jff-logo.png" alt="JFF">
+      <span>JFF Stats</span>
+    </div>
+    <button class="nav-drawer-close" id="navDrawerClose">✕</button>
+  </div>
+  <nav class="nav-drawer-links" id="navDrawerLinks">
+    <a href="index.html">Home</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+    <!-- <a href="gallery.html">Gallery</a> -->
+    <a href="about.html">About</a>
+    <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
+  </nav>
+</div>
+<div class="nav-drawer-overlay" id="navOverlay"></div>
 
 <!-- Team Profile View -->
 <div id="teamProfileView" style="display:none">
@@ -337,5 +360,35 @@
     <span>About</span>
   </a>
 </nav>
+
+<script>
+(function() {
+  var burger = document.getElementById('navBurger');
+  var drawer = document.getElementById('navDrawer');
+  var overlay = document.getElementById('navOverlay');
+  var closeBtn = document.getElementById('navDrawerClose');
+  if (!burger) return;
+  var page = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('#navDrawerLinks a').forEach(function(a) {
+    if (a.getAttribute('href') === page) a.classList.add('active');
+  });
+  function openDrawer() {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  burger.addEventListener('click', openDrawer);
+  overlay.addEventListener('click', closeDrawer);
+  closeBtn.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDrawer();
+  });
+})();
+</script>
 </body>
 </html>

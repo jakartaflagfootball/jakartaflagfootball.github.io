@@ -803,9 +803,120 @@ a { color: inherit; text-decoration: none; }
 .loading { color: var(--muted); font-size: 0.88rem; padding: 2rem 0; }
 .empty { color: var(--muted); font-size: 0.88rem; padding: 1rem 0; font-style: italic; }
 
-/* ─── BOTTOM TAB BAR ─────────────────────────── */
-.bottom-tab-bar {
-  display: none; /* hidden on desktop */
+/* ─── BOTTOM TAB BAR (legacy, kept hidden) ───── */
+.bottom-tab-bar { display: none; }
+
+/* ─── BURGER BUTTON ──────────────────────────── */
+.nav-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 201;
+}
+.nav-burger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+/* ─── SIDE DRAWER ────────────────────────────── */
+.nav-drawer {
+  position: fixed;
+  top: 0; right: 0;
+  width: min(300px, 82vw);
+  height: 100%;
+  background: rgba(10,10,10,0.98);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border);
+  z-index: 400;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 2rem 3rem;
+}
+.nav-drawer.open { transform: translateX(0); }
+
+.nav-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.nav-drawer-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.nav-drawer-logo img { height: 30px; width: auto; }
+.nav-drawer-logo span {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+.nav-drawer-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px;
+  line-height: 1;
+}
+.nav-drawer-close:hover { color: var(--text); }
+
+.nav-drawer-links {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.nav-drawer-links a {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.2s;
+  line-height: 1;
+}
+.nav-drawer-links a:last-child { border-bottom: none; }
+.nav-drawer-links a:hover { color: var(--text); }
+.nav-drawer-links a.active { color: var(--accent); }
+.nav-drawer-links .drawer-playbook {
+  color: var(--gold) !important;
+  font-size: 1.3rem;
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.nav-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 399;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.nav-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: all;
 }
 
 @media (max-width: 768px) {
@@ -820,50 +931,15 @@ a { color: inherit; text-decoration: none; }
   .tr-right { display: none; }
   .tournament-row { padding: 0.85rem 1rem; }
   .btn-primary, .btn-secondary { padding: 0.75rem 1.5rem; font-size: 0.78rem; }
-  /* Add padding so content doesn't hide behind bottom tab bar */
-  body { padding-bottom: 64px; }
+  body { padding-bottom: 0; }
 }
 
 @media (max-width: 480px) {
-  /* ── Nav: hide logo text, keep icon only ── */
+  /* ── Nav: hide logo text and links — burger takes over ── */
   .nav { padding: 0.75rem 1rem; }
   .nav-logo-text { display: none; }
-  /* ── Hide nav links — replaced by bottom tab bar ── */
   .nav-links { display: none; }
-
-  /* ── Bottom tab bar ── */
-  .bottom-tab-bar {
-    display: flex;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 200;
-    background: rgba(14,14,14,0.97);
-    backdrop-filter: blur(12px);
-    border-top: 1px solid var(--border);
-    height: 64px;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .tab-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    text-decoration: none;
-    color: var(--muted);
-    font-size: 0.58rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    transition: color 0.2s;
-    padding: 8px 4px;
-  }
-  .tab-item.active { color: var(--accent); }
-  .tab-item:hover { color: var(--text); }
-  .tab-icon { font-size: 1.3rem; line-height: 1; }
-  .tab-item.playbook { color: var(--gold); }
-  .tab-item.playbook.active { color: var(--gold); }
+  .nav-burger { display: flex; }
 
   /* ── Stats bar: 3-column grid ── */
   .stats-bar {

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LX5D460YS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-2LX5D460YS');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gallery — JFF Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/png" href="jff-logo.png">
+<style>
+/* ── GALLERY PAGE HEADER ── */
+.gallery-header {
+  padding: 8rem 0 0;
+}
+.gallery-header .container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.gallery-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+.gallery-title em {
+  font-style: normal;
+  color: var(--accent);
+}
+.gallery-sub {
+  color: var(--muted);
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+}
+
+/* ── FILTERS ── */
+.gallery-filters {
+  padding: 1.25rem 0 0;
+}
+.gallery-filters .container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 36px;
+}
+.filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filter-pill {
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  letter-spacing: 0.5px;
+}
+.filter-pill:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+.filter-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+.gallery-count {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-top: 4px;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── ACCORDION SECTION ── */
+.accordion-section {
+  padding: 1.5rem 0 5rem;
+}
+.accordion-section .container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.accordion-row {
+  display: flex;
+  height: 200px;
+  gap: 4px;
+  overflow: hidden;
+  transition: height 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.accordion-row.expanded {
+  height: 525px;
+}
+
+.acc-cell {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  flex: 1;
+  transition: flex 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-radius: 3px;
+  min-width: 48px;
+}
+.accordion-row:hover .acc-cell { flex: 0.4; }
+.accordion-row .acc-cell:hover { flex: 4; }
+
+.acc-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.acc-cell:hover img { transform: scale(1.04); }
+
+/* overlay */
+.acc-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.35s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px 18px;
+  pointer-events: none;
+}
+.acc-cell:hover .acc-overlay { opacity: 1; }
+
+.acc-tag {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acc-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 1px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* dim non-hovered cells */
+.acc-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  transition: background 0.35s;
+}
+.acc-cell:hover::after { background: transparent; }
+.accordion-row:hover .acc-cell:not(:hover)::after { background: rgba(0,0,0,0.55); }
+
+/* count badge */
+.count-badge {
+  position: absolute;
+  top: 10px; left: 12px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-display);
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.acc-cell:hover .count-badge { opacity: 1; }
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.97);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.lightbox.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.lb-inner {
+  position: relative;
+  max-width: 90vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.lb-inner img {
+  max-width: 90vw;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: 2px;
+}
+.lb-close {
+  position: absolute;
+  top: -44px; right: 0;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.2s;
+  letter-spacing: 1px;
+  font-family: var(--font-body);
+}
+.lb-close:hover { color: var(--text); }
+.lb-nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.lb-arrow {
+  width: 40px; height: 40px;
+  border: 1px solid #2a2a2a;
+  border-radius: 50%;
+  background: none;
+  color: #888;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.lb-arrow:hover { border-color: var(--accent); color: var(--accent); }
+.lb-caption { text-align: center; }
+.lb-caption h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+.lb-caption p {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.lb-counter {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* ── MOBILE: horizontal scroll strips ── */
+@media (max-width: 768px) {
+  .accordion-section .container { gap: 12px; }
+
+  .accordion-row {
+    flex-direction: row;
+    height: 260px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 0 1rem;
+    scrollbar-width: none;
+    /* scroll-reveal start state */
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .accordion-row::-webkit-scrollbar { display: none; }
+  .accordion-row.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .accordion-row.expanded { height: 260px; }
+
+  .acc-cell {
+    flex: 0 0 75vw;
+    height: 260px;
+    scroll-snap-align: start;
+    border-radius: 8px;
+  }
+  .accordion-row:hover .acc-cell { flex: 0 0 75vw; }
+  .accordion-row .acc-cell:hover { flex: 0 0 75vw; }
+  .acc-cell::after { background: transparent; }
+  .accordion-row:hover .acc-cell:not(:hover)::after { background: transparent; }
+  .acc-overlay { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">Jakarta Flag Football<span>Stats Hub</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+    <a href="gallery.html" class="active">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
+  </div>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-header">
+    <div class="nav-drawer-logo">
+      <img src="jff-logo.png" alt="JFF">
+      <span>JFF Stats</span>
+    </div>
+    <button class="nav-drawer-close" id="navDrawerClose">✕</button>
+  </div>
+  <nav class="nav-drawer-links" id="navDrawerLinks">
+    <a href="index.html">Home</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
+  </nav>
+</div>
+<div class="nav-drawer-overlay" id="navOverlay"></div>
+
+<!-- PAGE HEADER -->
+<div class="gallery-header">
+  <div class="container">
+    <div>
+      <h1 class="gallery-title">Game Day<br><em>Gallery</em></h1>
+      <p class="gallery-sub">Photos from JFF seasons &amp; tournaments</p>
+    </div>
+  </div>
+  <!-- FILTERS -->
+  <div class="gallery-filters">
+    <div class="container">
+      <div class="filter-group">
+        <span class="filter-label">Year</span>
+        <div class="filter-pills" id="yearPills"></div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Event</span>
+        <div class="filter-pills" id="eventPills"></div>
+      </div>
+    </div>
+    <div class="container">
+      <p class="gallery-count" id="galleryCount"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ACCORDION GALLERY -->
+<div class="accordion-section">
+  <div class="container" id="galleryGrid"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightboxBg(event)">
+  <div class="lb-inner" onclick="event.stopPropagation()">
+    <button class="lb-close" onclick="closeLightbox()">✕ Close</button>
+    <img id="lb-img" src="" alt="">
+    <div class="lb-nav">
+      <button class="lb-arrow" onclick="navigate(-1)">&#8592;</button>
+      <div class="lb-caption">
+        <h3 id="lb-title"></h3>
+        <p id="lb-tag"></p>
+      </div>
+      <div class="lb-counter" id="lb-counter"></div>
+      <button class="lb-arrow" onclick="navigate(1)">&#8594;</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM TAB BAR (mobile) -->
+<nav class="bottom-tab-bar">
+  <a href="index.html" class="tab-item">
+    <span class="tab-icon">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="tournaments.html" class="tab-item">
+    <span class="tab-icon">🏆</span>
+    <span>Tournaments</span>
+  </a>
+  <a href="teams.html" class="tab-item">
+    <span class="tab-icon">🛡️</span>
+    <span>Teams</span>
+  </a>
+  <a href="players.html" class="tab-item">
+    <span class="tab-icon">🏃</span>
+    <span>Players</span>
+  </a>
+  <a href="about.html" class="tab-item">
+    <span class="tab-icon">ℹ️</span>
+    <span>About</span>
+  </a>
+</nav>
+
+<script src="photos-data.js"></script>
+<script>
+(function () {
+  const MAX_DISPLAY = 20;
+  const CELLS_PER_ROW = 5;
+
+  let activeYear = null;
+  let activeEvent = null;
+  let displayedPhotos = [];
+  let current = 0;
+
+  // ── Build filter pills ─────────────────────────────────────
+
+  function buildPills(containerId, values, getCurrent, setCurrent) {
+    const container = document.getElementById(containerId);
+    const allBtn = makePill('All', true, () => {
+      setCurrent(null);
+      applyFilters();
+    });
+    container.appendChild(allBtn);
+
+    values.forEach(val => {
+      const btn = makePill(val, false, () => {
+        setCurrent(val);
+        applyFilters();
+      });
+      container.appendChild(btn);
+    });
+
+    // Keep "All" highlighted when current is null
+    container._refresh = function () {
+      const cur = getCurrent();
+      container.querySelectorAll('.filter-pill').forEach((b, i) => {
+        if (i === 0) b.classList.toggle('active', cur === null);
+        else b.classList.toggle('active', b.dataset.val === cur);
+      });
+    };
+  }
+
+  function makePill(label, isActive, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'filter-pill' + (isActive ? ' active' : '');
+    btn.textContent = label;
+    btn.dataset.val = label;
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  function uniqueSorted(arr) {
+    return [...new Set(arr)].sort();
+  }
+
+  // ── Filter logic ───────────────────────────────────────────
+
+  function applyFilters() {
+    // Refresh pill highlights
+    document.getElementById('yearPills')._refresh();
+    document.getElementById('eventPills')._refresh();
+
+    let pool;
+    if (activeYear === null && activeEvent === null) {
+      // Default: show hand-picked featured photos
+      pool = window.PHOTOS.filter(p => p.featured);
+    } else {
+      pool = window.PHOTOS.filter(p => {
+        const yearOk = activeYear === null || p.year === activeYear;
+        const eventOk = activeEvent === null || p.event === activeEvent;
+        return yearOk && eventOk;
+      });
+    }
+
+    const total = pool.length;
+    displayedPhotos = pool.slice(0, MAX_DISPLAY);
+
+    // Update counter
+    const counter = document.getElementById('galleryCount');
+    if (activeYear === null && activeEvent === null) {
+      counter.textContent = `Showing ${displayedPhotos.length} featured photos`;
+    } else {
+      counter.textContent = `Showing ${displayedPhotos.length} of ${total} matching photos`;
+    }
+
+    renderGallery(displayedPhotos);
+  }
+
+  // ── Render accordion grid ──────────────────────────────────
+
+  function renderGallery(photos) {
+    const grid = document.getElementById('galleryGrid');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < photos.length; i += CELLS_PER_ROW) {
+      const rowPhotos = photos.slice(i, i + CELLS_PER_ROW);
+      const row = document.createElement('div');
+      row.className = 'accordion-row';
+
+      rowPhotos.forEach((p, j) => {
+        const globalIdx = i + j;
+        const cell = document.createElement('div');
+        cell.className = 'acc-cell';
+        cell.onclick = () => openLightbox(globalIdx);
+
+        const num = String(globalIdx + 1).padStart(2, '0');
+        cell.innerHTML = `
+          <img src="${p.src}" alt="${p.title}">
+          <div class="count-badge">${num}</div>
+          <div class="acc-overlay">
+            <div class="acc-tag">${p.event}${p.eventSub ? ' · ' + p.eventSub : ''}</div>
+            <div class="acc-title">${p.title}</div>
+          </div>`;
+        row.appendChild(cell);
+      });
+
+      // Stagger reveal delay per row
+      row.style.transitionDelay = `${(i / CELLS_PER_ROW) * 0.08}s`;
+      grid.appendChild(row);
+    }
+
+    if (window.innerWidth > 768) {
+      // Desktop: row hover expand
+      grid.querySelectorAll('.accordion-row').forEach(row => {
+        row.addEventListener('mouseenter', () => row.classList.add('expanded'));
+        row.addEventListener('mouseleave', () => row.classList.remove('expanded'));
+      });
+    } else {
+      // Mobile: scroll-reveal via IntersectionObserver
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.15 });
+      grid.querySelectorAll('.accordion-row').forEach(r => io.observe(r));
+    }
+  }
+
+  // ── Lightbox ───────────────────────────────────────────────
+
+  function openLightbox(idx) {
+    current = idx;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeLightboxBg(e) {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+  }
+
+  function navigate(dir) {
+    current = (current + dir + displayedPhotos.length) % displayedPhotos.length;
+    updateLightbox();
+  }
+
+  function updateLightbox() {
+    const p = displayedPhotos[current];
+    document.getElementById('lb-img').src = p.src;
+    document.getElementById('lb-title').textContent = p.title;
+    document.getElementById('lb-tag').textContent = p.event + (p.eventSub ? ' · ' + p.eventSub : '');
+    document.getElementById('lb-counter').textContent = `${current + 1} / ${displayedPhotos.length}`;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+
+  // Lightbox touch swipe (mobile)
+  let touchStartX = 0;
+  const lb = document.getElementById('lightbox');
+  lb.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
+  });
+
+  // Expose closeLightbox/closeLightboxBg/navigate for inline onclick in lightbox HTML
+  window.closeLightbox = closeLightbox;
+  window.closeLightboxBg = closeLightboxBg;
+  window.navigate = navigate;
+
+  // ── Init ───────────────────────────────────────────────────
+
+  const years = uniqueSorted(window.PHOTOS.map(p => p.year));
+  const events = [...new Set(window.PHOTOS.map(p => p.event))]; // preserve insertion order
+
+  buildPills('yearPills', years, () => activeYear, v => { activeYear = v; });
+  buildPills('eventPills', events, () => activeEvent, v => { activeEvent = v; });
+
+  applyFilters();
+})();
+</script>
+
+<script>
+(function() {
+  var burger = document.getElementById('navBurger');
+  var drawer = document.getElementById('navDrawer');
+  var overlay = document.getElementById('navOverlay');
+  var closeBtn = document.getElementById('navDrawerClose');
+  if (!burger) return;
+  var page = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('#navDrawerLinks a').forEach(function(a) {
+    if (a.getAttribute('href') === page) a.classList.add('active');
+  });
+  function openDrawer() {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  burger.addEventListener('click', openDrawer);
+  overlay.addEventListener('click', closeDrawer);
+  closeBtn.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDrawer();
+  });
+})();
+</script>
+</body>
+</html>
