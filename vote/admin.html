@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POTW Admin — JFF</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="jff-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-logo" href="index.html">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">JFF Stats<span>POTW Admin</span></div>
+  </a>
+  <div class="nav-links"><a href="index.html">Voting page</a></div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <div class="eyebrow">Admin</div>
+    <h1 class="page-title">Voting <span>Rounds</span></h1>
+    <p class="page-sub">Open a new week, close one early, and see or export the results. All times are WIB (Jakarta).</p>
+  </div>
+</header>
+
+<main class="container" style="padding:2rem 16px 4rem;max-width:1100px">
+  <div id="demoBanner"></div>
+  <div id="gate"></div>
+  <div id="adminBody" style="display:none">
+    <div class="admin-card">
+      <h3>Open a new week</h3>
+      <form class="form-grid" id="newWeek">
+        <label>Name<input name="label" required placeholder="Week 3 — Matchday 3"></label>
+        <label>Opens (WIB)<input name="starts" type="datetime-local" required></label>
+        <label>Closes (WIB)<input name="ends" type="datetime-local" required></label>
+        <button class="btn-primary" type="submit">Create</button>
+      </form>
+    </div>
+    <div class="section-header"><h2>All weeks</h2><small id="weekCount"></small></div>
+    <div id="weeks"></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="jff-auth.js"></script>
+<script src="roster.js"></script>
+<script src="api.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
