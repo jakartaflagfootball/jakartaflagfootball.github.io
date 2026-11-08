@@ -111,6 +111,9 @@
     $('gridCount').textContent = `${list.length} players`;
     const byTeam = new Map();
     for (const p of list) { if (!byTeam.has(p.team)) byTeam.set(p.team, []); byTeam.get(p.team).push(p); }
+    // Within each team: by jersey number (0, 00, 1, 2 … 99); players without a number go last.
+    const num = (p) => (p.number === '' || p.number == null ? Infinity : Number(p.number));
+    for (const ps of byTeam.values()) ps.sort((a, b) => num(a) - num(b) || String(a.number).length - String(b.number).length);
     const card = (p) => {
       const isMine = mine === p.id;
       const btn = isMine ? '<button class="pc-vote is-mine" disabled>✓ Your vote</button>'
