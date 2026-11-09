@@ -36,7 +36,9 @@ window.JFFStory = {
     x.fillText(voted ? 'I VOTED' : 'VOTE FOR', L, 640);
     x.fillStyle = '#c0392b'; x.fillRect(L, 680, 140, 10);
     x.fillStyle = '#888'; x.font = '500 40px "DM Sans"';
-    x.fillText(catLabel.toUpperCase() + ' · PLAYER OF THE WEEK', L, 760);
+    x.fillText("PEOPLE'S CHOICE · " + catLabel.toUpperCase(), L, 760);
+    x.fillStyle = '#f2f2f2';
+    x.fillText('PLAYER OF THE WEEK', L, 812);
 
     // Player card
     const cy = 840, ch = 620;
@@ -66,7 +68,7 @@ window.JFFStory = {
     const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
     const file = new File([blob], `jff-potw-${p.nickname || p.number}.png`.replace(/\s+/g, '-'), { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: 'JFF Player of the Week' }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      try { await navigator.share({ files: [file], title: "JFF People's Choice Player of the Week" }); return; } catch (e) { if (e.name === 'AbortError') return; }
     }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = file.name; document.body.appendChild(a); a.click();

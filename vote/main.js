@@ -191,7 +191,7 @@
   const baseUrl = () => (api.demo ? location.origin + location.pathname : cfg.PUBLIC_URL);
   const shareUrl = (pid, cat) => `${baseUrl()}?p=${encodeURIComponent(pid)}&c=${cat}`;
   const shareText = (p, cat, voted) =>
-    `${voted ? 'I just voted for' : 'Vote for'} ${p.nickname || p.full_name} #${p.number} (${teams[p.team].name}) for JFF ${CATEGORY_LABEL[cat]} Player of the Week! 🏈🔥 One vote each, so get in:`;
+    `${voted ? 'I just voted for' : 'Vote for'} ${p.nickname || p.full_name} #${p.number} (${teams[p.team].name}) for JFF People's Choice ${CATEGORY_LABEL[cat]} Player of the Week! 🏈🔥 One vote each, so get in:`;
 
   function openShare(pid, cat, voted) {
     const p = players[pid];
@@ -210,7 +210,7 @@
     $('shareStory').onclick = () => JFFStory.make(p, teams[p.team], CATEGORY_LABEL[cat], voted, baseUrl()).catch((e) => { console.error(e); JFF.toast('Could not make the image', 'error'); });
     const nat = $('shareNative');
     nat.style.display = navigator.share ? 'flex' : 'none';
-    nat.onclick = () => navigator.share({ title: 'JFF Player of the Week', text, url }).catch(() => {});
+    nat.onclick = () => navigator.share({ title: "JFF People's Choice Player of the Week", text, url }).catch(() => {});
     showModal('shareModal');
   }
 
