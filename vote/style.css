@@ -302,3 +302,18 @@ button:disabled { cursor: default; }
 .captain-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .75rem; border: 1px solid var(--border); border-radius: 4px; font-size: .85rem; }
 .captain-row span { min-width: 0; overflow-wrap: anywhere; }
 .captain-row b { font-weight: 600; margin-right: .5rem; }
+
+/* ─── Nominee photos ──────────────────────────────────── */
+.player-card.has-photo { padding-top: 0; overflow: hidden; }
+.pc-photo { margin: 0 -1rem .25rem; aspect-ratio: 4 / 5; background: var(--surface2); overflow: hidden; position: relative; }
+.pc-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; }
+.pc-photo::after { content: ''; position: absolute; inset: auto 0 0; height: 35%; background: linear-gradient(transparent, var(--surface)); }
+.photo-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; margin-bottom: .75rem; }
+.photo-item { display: flex; flex-direction: column; gap: .5rem; }
+.photo-frame { position: relative; aspect-ratio: 4 / 5; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); overflow: hidden; display: grid; place-items: center; color: #555; font-size: .8rem; }
+.photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+.photo-busy { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,14,14,.7); color: var(--text); font-style: normal; font-size: .8rem; }
+.photo-meta { display: flex; flex-direction: column; gap: .4rem; font-size: .85rem; }
+.photo-meta small { color: var(--muted); font-size: .75rem; }
+.photo-meta .btn-sm { width: 100%; justify-content: center; }
+.photo-tip { color: var(--muted); font-size: .8rem; margin-bottom: 2rem; }

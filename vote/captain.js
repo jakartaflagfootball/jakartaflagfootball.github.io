@@ -3,7 +3,7 @@
   const { api, teams, players, esc } = JFF;
   const $ = (id) => document.getElementById(id);
   const MAX = 2;
-  const S = { user: null, teamIds: [], team: '', weeks: [], week: null, saved: new Set(), picked: new Set(), busy: false };
+  const S = { user: null, teamIds: [], team: '', weeks: [], week: null, saved: new Set(), picked: new Set(), busy: false, photos: {}, uploading: null, photoFor: null };
 
   const votingStarted = () => S.week && Date.now() >= +new Date(S.week.starts_at);
   const locked = (pid) => votingStarted() && S.saved.has(pid);
@@ -34,6 +34,8 @@
     else status = `<div class="nom-note">Pick 1–2 players, then tap <b>Submit nominees</b>. You can change them until ${JFF.fmtDate(S.week.starts_at)}. Until you submit, nobody from ${esc(t.name)} can be voted for.</div>`;
     $('nomStatus').innerHTML = status;
 
+    renderPhotos();
+
     const roster = window.JFF_PLAYERS.filter((p) => p.team === S.team).sort(byNumber);
     $('rosterTitle').textContent = t.name;
     $('pickCount').textContent = `${S.picked.size} of ${MAX} picked`;
@@ -53,9 +55,61 @@
     $('submitBtn').textContent = S.busy ? 'Saving…' : !S.picked.size ? 'Remove nominees' : 'Submit nominees';
   }
 
+  // ─── Photos ───
+  const canSetPhoto = (pid) => !votingStarted() || !S.photos[pid];
+  function renderPhotos() {
+    const saved = [...S.saved].map((id) => players[id]).filter(Boolean).sort(byNumber);
+    if (!saved.length) { $('photos').innerHTML = ''; return; }
+    $('photos').innerHTML = `<div class="section-header"><h2>Photos</h2><small>Optional · shown on the vote card and Story image</small></div>
+      <div class="photo-list">${saved.map((p) => {
+        const url = api.photoUrl(S.photos[p.id]);
+        const busy = S.uploading === p.id;
+        const can = canSetPhoto(p.id) && !S.uploading;
+        return `<div class="photo-item">
+          <div class="photo-frame">${url ? `<img src="${esc(url)}" alt="${esc(p.nickname || p.full_name)}">` : '<span>No photo</span>'}${busy ? '<i class="photo-busy">Uploading…</i>' : ''}</div>
+          <div class="photo-meta"><b>${esc(p.nickname || p.full_name)} #${esc(p.number)}</b>
+            ${canSetPhoto(p.id) ? `<button type="button" class="btn-secondary btn-sm" data-photo="${p.id}" ${can ? '' : 'disabled'}>${url ? 'Change photo' : 'Add photo'}</button>` : '<small>🔒 Locked while voting is open</small>'}
+          </div></div>`;
+      }).join('')}</div>
+      <p class="photo-tip">Use a clear, upright photo of the player, ideally in their jersey. It's cropped to a 4:5 portrait, like an Instagram post.</p>`;
+  }
+
+  // Shrink to Instagram size as a JPEG before uploading.
+  async function shrink(file) {
+    let src;
+    try { src = await createImageBitmap(file); }
+    catch {
+      src = await new Promise((res, rej) => {
+        const i = new Image(); i.onload = () => res(i);
+        i.onerror = () => rej(new Error("Couldn't read this photo. Try a JPG or PNG (on iPhone, a screenshot of the photo works)."));
+        i.src = URL.createObjectURL(file);
+      });
+    }
+    // Keep enough pixels to fill a 1080×1350 portrait crop, but cap the long side at 2400.
+    const r = Math.min(1, Math.max(1080 / src.width, 1350 / src.height), 2400 / Math.max(src.width, src.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(src.width * r); c.height = Math.round(src.height * r);
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return new Promise((res) => c.toBlob(res, 'image/jpeg', 0.86));
+  }
+
+  async function uploadPhoto(pid, file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type) && !/\.(heic|heif|jpe?g|png|webp)$/i.test(file.name)) return JFF.toast('Please pick a photo.', 'error');
+    S.uploading = pid; renderPhotos();
+    try {
+      const blob = await shrink(file);
+      S.photos[pid] = await api.uploadPhoto(S.week.id, pid, blob);
+      JFF.toast('Photo saved');
+    } catch (e) {
+      console.error(e); JFF.toast(e.message || 'Upload failed. Try again.', 'error');
+    } finally { S.uploading = null; renderPhotos(); }
+  }
+
   async function loadTeam() {
     const rows = await api.listNominations(S.week.id);
     S.saved = new Set(rows.filter((r) => r.team_id === S.team).map((r) => r.player_id));
+    S.photos = Object.fromEntries(rows.filter((r) => r.photo_path).map((r) => [r.player_id, r.photo_path]));
     S.picked = new Set(S.saved);
     render();
   }
@@ -119,13 +173,15 @@
   }
 
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-pick],[data-signin],#signOutC,#submitBtn');
+    const t = e.target.closest('[data-pick],[data-photo],[data-signin],#signOutC,#submitBtn');
     if (!t || S.busy) return;
-    if (t.dataset.pick) toggle(t.dataset.pick);
+    if (t.dataset.photo) { if (S.uploading) return; S.photoFor = t.dataset.photo; $('photoInput').value = ''; $('photoInput').click(); }
+    else if (t.dataset.pick) toggle(t.dataset.pick);
     else if (t.id === 'submitBtn') submit();
     else if (t.id === 'signOutC') api.signOut();
     else if (t.hasAttribute('data-signin')) api.signIn().catch((err) => JFF.toast(err.message, 'error'));
   });
+  $('photoInput').addEventListener('change', (e) => uploadPhoto(S.photoFor, e.target.files[0]));
   $('teamSelect').addEventListener('change', (e) => { S.team = e.target.value; loadTeam(); });
 
   $('seasonLabel').textContent = window.JFF_CONFIG.SEASON;

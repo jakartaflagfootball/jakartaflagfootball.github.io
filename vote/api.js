@@ -55,7 +55,7 @@
       },
       // ─── Captain nominations ───
       async listNominations(weekId) {
-        return ok(await sb.from('potw_nominations').select('player_id,team_id,nominated_by,created_at').eq('week_id', weekId));
+        return ok(await sb.from('potw_nominations').select('player_id,team_id,nominated_by,created_at,photo_path').eq('week_id', weekId));
       },
       async myCaptainTeams() {
         const rows = ok(await sb.rpc('my_captain_teams')) || [];
@@ -74,6 +74,19 @@
         if (error) throw error;
         if (!count) throw new Error("Voting has already opened, so nominees can't be removed. Ask a JFF admin.");
       },
+      // Upload an already-resized JPEG for a nominee, then save it on the nomination.
+      async uploadPhoto(weekId, playerId, blob) {
+        const path = `${weekId}/${playerId}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.jpg`;
+        const up = await sb.storage.from('nominee-photos').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+        if (up.error) {
+          if (/row-level security|403|Unauthorized/i.test(up.error.message || '')) throw new Error("This photo can't be changed now. Voting has opened and the nominee already has a photo.");
+          throw up.error;
+        }
+        const rows = ok(await sb.from('potw_nominations').update({ photo_path: path }).eq('week_id', weekId).eq('player_id', playerId).select('player_id'));
+        if (!rows.length) throw new Error("This photo can't be changed now. Voting has opened and the nominee already has a photo.");
+        return path;
+      },
+      photoUrl(path) { return path ? `${cfg.SUPABASE_URL}/storage/v1/object/public/nominee-photos/${path}` : null; },
       async listCaptains() { return ok(await sb.from('team_captains').select('team_id,email').order('team_id')); },
       async addCaptain(teamId, email) {
         const { error } = await sb.from('team_captains').insert({ team_id: teamId, email: email.trim().toLowerCase() });
@@ -159,6 +172,13 @@
         save(state); await delay();
       },
       async unnominate(weekId, playerId) { state.nominations = (state.nominations || []).filter((n) => !(n.week_id === weekId && n.player_id === playerId)); save(state); },
+      async uploadPhoto(weekId, playerId, blob) {
+        const n = (state.nominations || []).find((x) => x.week_id === weekId && x.player_id === playerId);
+        if (!n) throw new Error('Nominate the player first.');
+        n.photo_path = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); });
+        save(state); await delay(); return n.photo_path;
+      },
+      photoUrl(path) { return path || null; },
       async listCaptains() { return [...(state.captains || [])]; },
       async addCaptain(team_id, email) { state.captains ||= []; state.captains.push({ team_id, email: email.trim().toLowerCase() }); save(state); },
       async removeCaptain(teamId, email) { state.captains = (state.captains || []).filter((c) => !(c.team_id === teamId && c.email === email)); save(state); },

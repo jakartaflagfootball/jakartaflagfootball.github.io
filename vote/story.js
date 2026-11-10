@@ -1,12 +1,12 @@
 // Builds a 1080×1920 Instagram Story image for a player, in the JFF look.
 window.JFFStory = {
-  async make(p, team, catLabel, voted, url) {
+  async make(p, team, catLabel, voted, url, photoUrl) {
     await Promise.all([document.fonts.load('200px "Bebas Neue"'), document.fonts.load('600 40px "DM Sans"')]).catch(() => {});
     const W = 1080, H = 1920, c = document.createElement('canvas');
     c.width = W; c.height = H;
     const x = c.getContext('2d');
-    const img = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
-    const [logo, teamLogo] = await Promise.all([img('jff-logo.png'), team.logo ? img('team-logos/' + team.logo) : null]);
+    const img = (src, cors) => new Promise((res) => { const i = new Image(); if (cors) i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+    const [logo, teamLogo, photo] = await Promise.all([img('jff-logo.png'), team.logo ? img('team-logos/' + team.logo) : null, photoUrl ? img(photoUrl, true) : null]);
 
     // Background
     x.fillStyle = '#0e0e0e'; x.fillRect(0, 0, W, H);
@@ -23,6 +23,36 @@ window.JFFStory = {
 
     const L = 96;
     const fit = (text, font, size, max) => { let s = size; do { x.font = font.replace('{s}', s); s -= 4; } while (x.measureText(text).width > max && s > 40); };
+
+    if (photo) {
+      // Photo layout: the player fills the top, details sit on the fade below.
+      const PH = 1300, r = Math.max(W / photo.width, PH / photo.height);
+      const pw = photo.width * r, ph = photo.height * r;
+      x.drawImage(photo, (W - pw) / 2, Math.min(0, (PH - ph) * 0.25), pw, ph);
+      g = x.createLinearGradient(0, 0, 0, 420); g.addColorStop(0, 'rgba(14,14,14,.85)'); g.addColorStop(1, 'rgba(14,14,14,0)');
+      x.fillStyle = g; x.fillRect(0, 0, W, 420);
+      g = x.createLinearGradient(0, 640, 0, PH); g.addColorStop(0, 'rgba(14,14,14,0)'); g.addColorStop(1, '#0e0e0e');
+      x.fillStyle = g; x.fillRect(0, 640, W, PH - 640);
+      x.fillStyle = '#c0392b'; x.fillRect(W - 18, 0, 18, H);
+      if (logo) { const h = 110, w = (logo.width / logo.height) * h; x.drawImage(logo, L, 110, w, h); }
+      x.fillStyle = '#f2f2f2'; x.font = '56px "Bebas Neue"'; x.textBaseline = 'alphabetic';
+      x.fillText('JAKARTA FLAG FOOTBALL', L, 290);
+      x.fillStyle = '#c9a84c'; x.font = '500 28px "DM Sans"';
+      x.fillText((window.JFF_CONFIG.SEASON || '').toUpperCase().split('').join(String.fromCharCode(8202)), L, 336);
+      if (teamLogo) { const s = 150, k = Math.min(s / teamLogo.width, s / teamLogo.height); x.drawImage(teamLogo, W - L - teamLogo.width * k, 110, teamLogo.width * k, teamLogo.height * k); }
+
+      x.fillStyle = '#c0392b'; x.font = '90px "Bebas Neue"';
+      x.fillText(voted ? 'I VOTED FOR' : 'VOTE FOR', L, 1090);
+      x.fillStyle = '#f2f2f2'; fit((p.nickname || p.full_name).toUpperCase(), '{s}px "Bebas Neue"', 190, W - L * 2 - 20);
+      x.fillText((p.nickname || p.full_name).toUpperCase(), L, 1250);
+      x.fillStyle = '#c9a84c';
+      const meta = ['#' + p.number, p.position, team.name].filter(Boolean).join('  ·  ').toUpperCase();
+      fit(meta, '600 {s}px "DM Sans"', 42, W - L * 2); x.fillText(meta, L, 1325);
+      x.fillStyle = '#aaa'; fit(p.full_name, '400 {s}px "DM Sans"', 36, W - L * 2); x.fillText(p.full_name, L, 1380);
+      x.fillStyle = '#888'; x.font = '500 34px "DM Sans"';
+      fit("PEOPLE'S CHOICE · " + catLabel.toUpperCase() + ' · PLAYER OF THE WEEK', '500 {s}px "DM Sans"', 34, W - L * 2);
+      x.fillText("PEOPLE'S CHOICE · " + catLabel.toUpperCase() + ' · PLAYER OF THE WEEK', L, 1460);
+    } else {
 
     // Header
     if (logo) { const h = 120, w = (logo.width / logo.height) * h; x.drawImage(logo, L, 150, w, h); }
@@ -57,6 +87,7 @@ window.JFFStory = {
     const meta = [p.position, team.name].filter(Boolean).join('  ·  ').toUpperCase();
     fit(meta, '600 {s}px "DM Sans"', 38, W - L * 2 - 120);
     x.fillText(meta, L + 60, cy + 550);
+    }
 
     // Call to action
     x.fillStyle = '#f2f2f2'; x.font = '110px "Bebas Neue"';

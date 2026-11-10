@@ -7,7 +7,7 @@
 
   const params = new URLSearchParams(location.search);
   const S = {
-    user: null, weeks: [], week: null, myVotes: {}, board: [], voters: 0, noms: null,
+    user: null, weeks: [], week: null, myVotes: {}, board: [], voters: 0, noms: null, photos: {},
     cat: CATEGORIES.includes(params.get('c')) ? params.get('c') : 'men_offense',
     invite: players[params.get('p')] || null,
     search: '', team: '', showAll: false, pending: null,
@@ -121,7 +121,9 @@
         : mine ? '<button class="pc-vote" disabled>Voted</button>'
         : !open() ? `<button class="pc-vote" disabled>${notStarted() ? 'Opens soon' : 'Closed'}</button>`
         : `<button class="pc-vote" data-vote="${p.id}">Vote</button>`;
-      return `<article class="player-card ${isMine ? 'voted' : mine ? 'dim' : ''} ${S.invite?.id === p.id ? 'highlight' : ''}" id="pc-${p.id}">
+      const photo = api.photoUrl(S.photos[p.id]);
+      return `<article class="player-card ${photo ? 'has-photo' : ''} ${isMine ? 'voted' : mine ? 'dim' : ''} ${S.invite?.id === p.id ? 'highlight' : ''}" id="pc-${p.id}">
+        ${photo ? `<div class="pc-photo"><img src="${esc(photo)}" alt="${esc(p.nickname || p.full_name)}" loading="lazy"></div>` : ''}
         <div class="pc-top"><span class="pc-num">${esc(p.number)}</span><span class="pc-pos ${p.position ? '' : 'empty'}">${esc(p.position || 'Pos TBA')}</span></div>
         <div><div class="pc-nick">${esc(p.nickname || p.full_name)}</div><div class="pc-full">${esc(p.full_name)}</div></div>
         <div class="pc-actions">${btn}<button class="pc-share" data-share="${p.id}" title="Share ${esc(p.nickname)}'s vote link" aria-label="Share">${SHARE_ICON}</button></div>
@@ -160,8 +162,10 @@
     if (!S.week?.nominations) { S.noms = null; return false; }
     const rows = await api.listNominations(S.week.id);
     const next = new Set(rows.map((r) => r.player_id));
-    const changed = !S.noms || next.size !== S.noms.size || [...next].some((id) => !S.noms.has(id));
-    S.noms = next;
+    const photos = Object.fromEntries(rows.filter((r) => r.photo_path).map((r) => [r.player_id, r.photo_path]));
+    const changed = !S.noms || next.size !== S.noms.size || [...next].some((id) => !S.noms.has(id))
+      || JSON.stringify(photos) !== JSON.stringify(S.photos);
+    S.noms = next; S.photos = photos;
     return changed;
   }
   async function refreshBoard() {
@@ -174,7 +178,7 @@
   }
   async function loadWeek() {
     S.myVotes = S.week ? await api.myVotes(S.week.id) : {};
-    S.board = []; S.voters = 0; S.noms = null;
+    S.board = []; S.voters = 0; S.noms = null; S.photos = {};
     try { await loadNoms(); } catch (e) { console.error(e); }
     renderAll(); await refreshBoard(); renderWeek();
   }
@@ -229,7 +233,7 @@
       try { await navigator.clipboard.writeText(url); JFF.toast('Link copied'); }
       catch { prompt('Copy this link:', url); }
     };
-    $('shareStory').onclick = () => JFFStory.make(p, teams[p.team], CATEGORY_LABEL[cat], voted, baseUrl()).catch((e) => { console.error(e); JFF.toast('Could not make the image', 'error'); });
+    $('shareStory').onclick = () => JFFStory.make(p, teams[p.team], CATEGORY_LABEL[cat], voted, baseUrl(), api.photoUrl(S.photos[p.id])).catch((e) => { console.error(e); JFF.toast('Could not make the image', 'error'); });
     const nat = $('shareNative');
     nat.style.display = navigator.share ? 'flex' : 'none';
     nat.onclick = () => navigator.share({ title: "JFF People's Choice Player of the Week", text, url }).catch(() => {});
