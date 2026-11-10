@@ -16,7 +16,7 @@
     <img src="jff-logo.png" alt="JFF">
     <div class="nav-logo-text">JFF Stats<span>POTW Admin</span></div>
   </a>
-  <div class="nav-links"><a href="index.html">Voting page</a></div>
+  <div class="nav-links"><a href="captain.html">Captain page</a><a href="index.html">Voting page</a></div>
 </nav>
 
 <header class="page-header">
@@ -35,13 +35,25 @@
       <h3>Open a new week</h3>
       <form class="form-grid" id="newWeek">
         <label>Name<input name="label" required placeholder="Week 3 — Matchday 3"></label>
-        <label>Opens (WIB)<input name="starts" type="datetime-local" required></label>
+        <label><span id="startsLabel">Voting opens · nominations close (WIB)</span><input name="starts" type="datetime-local" required></label>
         <label>Closes (WIB)<input name="ends" type="datetime-local" required></label>
         <button class="btn-primary" type="submit">Create</button>
+        <label class="admin-check"><input type="checkbox" name="nominations" checked> Captain nominations (fans vote only for nominees)</label>
       </form>
     </div>
     <div class="section-header"><h2>All weeks</h2><small id="weekCount"></small></div>
     <div id="weeks"></div>
+
+    <div class="section-header" style="margin-top:3rem"><h2>Team captains</h2><small id="captainCount"></small></div>
+    <div class="admin-card">
+      <p class="page-sub" style="margin:0 0 1rem">Usually 2 Google accounts per team (captain and co-captain); you can add more. They nominate at <a href="captain.html" style="color:var(--gold)">jakartaflagfootball.com/vote/captain.html</a> after each gameday.</p>
+      <form class="form-grid" id="newCaptain">
+        <label>Team<select name="team" id="captainTeam" class="filter-select" required></select></label>
+        <label>Google email<input name="email" type="email" required placeholder="captain@gmail.com" autocomplete="off"></label>
+        <button class="btn-primary" type="submit">Add captain</button>
+      </form>
+      <div class="captain-list" id="captains"></div>
+    </div>
   </div>
 </main>
 

@@ -53,6 +53,33 @@
         if (error) throw error;
         return count ?? 0;
       },
+      // ─── Captain nominations ───
+      async listNominations(weekId) {
+        return ok(await sb.from('potw_nominations').select('player_id,team_id,nominated_by,created_at').eq('week_id', weekId));
+      },
+      async myCaptainTeams() {
+        const rows = ok(await sb.rpc('my_captain_teams')) || [];
+        return rows.map((r) => (typeof r === 'string' ? r : Object.values(r)[0]));
+      },
+      async nominate(weekId, teamId, playerId) {
+        const { error } = await sb.from('potw_nominations').insert({ week_id: weekId, team_id: teamId, player_id: playerId });
+        if (error) {
+          if (error.code === '23505') return; // already nominated
+          if (error.code === '42501') throw new Error('Nominations are closed for this week, or this email is not a captain of this team.');
+          throw error;
+        }
+      },
+      async unnominate(weekId, playerId) {
+        const { count, error } = await sb.from('potw_nominations').delete({ count: 'exact' }).eq('week_id', weekId).eq('player_id', playerId);
+        if (error) throw error;
+        if (!count) throw new Error("Voting has already opened, so nominees can't be removed. Ask a JFF admin.");
+      },
+      async listCaptains() { return ok(await sb.from('team_captains').select('team_id,email').order('team_id')); },
+      async addCaptain(teamId, email) {
+        const { error } = await sb.from('team_captains').insert({ team_id: teamId, email: email.trim().toLowerCase() });
+        if (error && error.code !== '23505') throw error;
+      },
+      async removeCaptain(teamId, email) { ok(await sb.from('team_captains').delete().eq('team_id', teamId).eq('email', email)); },
     };
   }
 
@@ -66,7 +93,7 @@
     if (!state) {
       const now = Date.now(), day = 864e5;
       state = {
-        user: null, nextWeek: 3, votes: [],
+        user: null, nextWeek: 3, votes: [], nominations: [], captains: [],
         weeks: [
           { id: 2, label: 'Week 2 — Matchday 2', starts_at: new Date(now - day).toISOString(), ends_at: new Date(now + 4 * day).toISOString(), closed: false },
           { id: 1, label: 'Week 1 — Matchday 1', starts_at: new Date(now - 8 * day).toISOString(), ends_at: new Date(now - 2 * day).toISOString(), closed: false },
@@ -103,6 +130,7 @@
         if (!w || !isOpen(w)) throw new Error('Voting is closed for this week.');
         const p = window.JFF_PLAYERS.find((x) => x.id === playerId);
         if (!p || p.division !== category.split('_')[0]) throw new Error('That player is not in this category.');
+        if (w.nominations && !(state.nominations || []).some((n) => n.week_id === weekId && n.player_id === playerId)) throw new Error('That player was not nominated this week.');
         if (state.votes.some((v) => v.week_id === weekId && v.category === category && v.voter_id === state.user.id))
           throw new Error('You already voted in this category this week.');
         state.votes.push({ week_id: weekId, category, player_id: playerId, voter_id: state.user.id });
@@ -119,6 +147,21 @@
       async updateWeek(id, patch) { const w = state.weeks.find((x) => x.id === id); Object.assign(w, patch); save(state); return w; },
       async deleteWeek(id) { state.weeks = state.weeks.filter((x) => x.id !== id); state.votes = state.votes.filter((v) => v.week_id !== id); save(state); },
       async clearVotes(id) { const n = state.votes.filter((v) => v.week_id === id).length; state.votes = state.votes.filter((v) => v.week_id !== id); save(state); return n; },
+      async listNominations(weekId) { return delay((state.nominations || []).filter((n) => n.week_id === weekId)); },
+      async myCaptainTeams() { return state.user ? window.JFF_TEAMS.map((t) => t.id) : []; },
+      async nominate(weekId, teamId, playerId) {
+        state.nominations ||= [];
+        const w = state.weeks.find((x) => x.id === weekId);
+        if (!w?.nominations) throw new Error('This week does not use captain nominations.');
+        if (state.nominations.some((n) => n.week_id === weekId && n.player_id === playerId)) return;
+        if (state.nominations.filter((n) => n.week_id === weekId && n.team_id === teamId).length >= 2) throw new Error('Each team can nominate at most 2 players.');
+        state.nominations.push({ week_id: weekId, team_id: teamId, player_id: playerId, nominated_by: state.user?.email, created_at: new Date().toISOString() });
+        save(state); await delay();
+      },
+      async unnominate(weekId, playerId) { state.nominations = (state.nominations || []).filter((n) => !(n.week_id === weekId && n.player_id === playerId)); save(state); },
+      async listCaptains() { return [...(state.captains || [])]; },
+      async addCaptain(team_id, email) { state.captains ||= []; state.captains.push({ team_id, email: email.trim().toLowerCase() }); save(state); },
+      async removeCaptain(teamId, email) { state.captains = (state.captains || []).filter((c) => !(c.team_id === teamId && c.email === email)); save(state); },
       resetDemo() { try { localStorage.removeItem(KEY); } catch {} location.reload(); },
     };
   }
@@ -137,6 +180,8 @@
     CATEGORY_LABEL: { men_offense: "Men's Offense", men_defense: "Men's Defense", women_offense: "Women's Offense", women_defense: "Women's Defense" },
     teams: Object.fromEntries(window.JFF_TEAMS.map((t) => [t.id, t])),
     players: Object.fromEntries(window.JFF_PLAYERS.map((p) => [p.id, p])),
+    // Nominations weeks: captains pick until starts_at; late picks are accepted until ends_at.
+    nominatingOpen(w) { return !!w && w.nominations && !w.closed && Date.now() < +new Date(w.ends_at); },
     isOpen(w) { return !!w && !w.closed && Date.now() >= +new Date(w.starts_at) && Date.now() <= +new Date(w.ends_at); },
     // Week to show by default: the open one, else the next upcoming, else the most recent.
     pickWeek(weeks) {

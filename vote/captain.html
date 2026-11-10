@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Captain Nominations — JFF</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="jff-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-logo" href="index.html">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">JFF Stats<span>Captains</span></div>
+  </a>
+  <div class="nav-links"><a href="index.html">Voting page</a></div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <div class="eyebrow" id="seasonLabel">Open SZN IV</div>
+    <h1 class="page-title"><span class="title-kicker">People's Choice</span>Captain <span>Nominations</span></h1>
+    <p class="page-sub">Pick 1–2 players from your team who stood out this gameday. Fans can then vote for them in both Offense and Defense.</p>
+  </div>
+</header>
+
+<main class="container" style="padding:2rem 16px 4rem;max-width:900px">
+  <div id="demoBanner"></div>
+  <div id="gate"></div>
+  <div id="body" style="display:none">
+    <div class="nom-head">
+      <label class="nom-field" id="teamField">Team<select id="teamSelect"></select></label>
+      <div class="nom-week"><b id="weekLabel"></b><span id="weekInfo"></span></div>
+    </div>
+    <div id="nomStatus"></div>
+    <div class="section-header"><h2 id="rosterTitle">Roster</h2><small id="pickCount"></small></div>
+    <div class="players-grid" id="roster"></div>
+    <div class="nom-bar" id="nomBar">
+      <span id="nomBarText"></span>
+      <button class="btn-primary" id="submitBtn" type="button">Submit nominees</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="jff-auth.js"></script>
+<script src="roster.js"></script>
+<script src="api.js"></script>
+<script src="captain.js"></script>
+</body>
+</html>

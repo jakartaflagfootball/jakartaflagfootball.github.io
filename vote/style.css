@@ -268,3 +268,37 @@ button:disabled { cursor: default; }
 .inapp-notice span { color: #ccc; }
 .inapp-btns { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .2rem; }
 @media (max-width: 600px) { .auth-bar .signin-slot { width: 100%; } }
+
+/* ─── Captain nominations ─────────────────────────────── */
+.nom-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.nom-field { display: flex; flex-direction: column; gap: .35rem; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.nom-field select { min-width: 220px; padding: .65rem .8rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font: 500 .95rem var(--font-body); letter-spacing: 0; text-transform: none; }
+.nom-week { display: flex; flex-direction: column; gap: .15rem; }
+.nom-week b { font-family: var(--font-display); font-size: 1.4rem; letter-spacing: .05em; font-weight: 400; }
+.nom-week span { color: var(--muted); font-size: .82rem; }
+.nom-note { margin-bottom: 1.5rem; padding: .85rem 1rem; border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 4px; background: var(--surface); font-size: .88rem; line-height: 1.5; color: var(--muted); }
+.nom-note b { color: var(--text); }
+.nom-note.ok { border-left-color: var(--ok); color: var(--text); }
+.nom-note.warn { border-left-color: var(--accent); color: var(--text); }
+.nom-card { text-align: left; font: inherit; color: inherit; cursor: pointer; min-height: 132px; -webkit-tap-highlight-color: transparent; }
+.nom-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.nom-card:active { transform: scale(.98); }
+.nom-card.locked { cursor: default; }
+.nom-tick { margin-top: auto; font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #555; }
+.nom-card.voted .nom-tick { color: var(--ok); }
+.nom-bar { position: sticky; bottom: 0; z-index: 20; display: none; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; padding: .8rem 1rem calc(.8rem + env(safe-area-inset-bottom, 0px)); background: rgba(14,14,14,.94); border-top: 1px solid var(--border); backdrop-filter: blur(10px); }
+.nom-bar.show { display: flex; }
+.nom-bar span { font-size: .85rem; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nom-bar .btn-primary { flex-shrink: 0; }
+.nom-waiting { margin: -.5rem 0 1.5rem; font-size: .82rem; color: var(--muted); }
+.nom-waiting b { color: var(--text); font-weight: 500; }
+.form-grid .admin-check { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: .5rem; font-size: .85rem; letter-spacing: 0; text-transform: none; color: var(--text); cursor: pointer; }
+.form-grid .admin-check input { width: 18px; height: 18px; flex: none; padding: 0; accent-color: var(--accent); }
+#newCaptain { grid-template-columns: 1fr 1.4fr auto; }
+@media (max-width: 640px) { #newCaptain { grid-template-columns: 1fr; } }
+.nom-summary { margin-top: .75rem; font-size: .82rem; color: var(--muted); line-height: 1.6; }
+.nom-summary b { color: var(--text); font-weight: 500; }
+.captain-list { display: grid; gap: .4rem; margin-top: 1rem; }
+.captain-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .75rem; border: 1px solid var(--border); border-radius: 4px; font-size: .85rem; }
+.captain-row span { min-width: 0; overflow-wrap: anywhere; }
+.captain-row b { font-weight: 600; margin-right: .5rem; }

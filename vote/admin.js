@@ -20,6 +20,7 @@
     $('weekCount').textContent = `${weeks.length} total`;
     const boards = await Promise.all(weeks.map((w) => api.leaderboard(w.id)));
     const voters = await Promise.all(weeks.map((w) => api.voterCount(w.id)));
+    const noms = await Promise.all(weeks.map((w) => (w.nominations ? api.listNominations(w.id).catch(() => []) : [])));
     $('weeks').innerHTML = weeks.map((w, i) => {
       const [label, cls] = status(w);
       const res = CATEGORIES.map((c) => {
@@ -41,9 +42,37 @@
             <button class="btn-link" data-delete="${w.id}" style="color:#a44">Delete</button>
           </div>
         </div>
+        ${w.nominations ? nomSummary(noms[i]) : ''}
         <div class="week-results">${res}</div>
       </div>`;
     }).join('') || '<p class="lb-empty">No weeks yet. Create the first one above.</p>';
+  }
+
+  function nomSummary(rows) {
+    const byTeam = new Map();
+    for (const r of rows) { if (!players[r.player_id]) continue; if (!byTeam.has(r.team_id)) byTeam.set(r.team_id, []); byTeam.get(r.team_id).push(players[r.player_id]); }
+    const all = window.JFF_TEAMS;
+    const missing = all.filter((t) => !byTeam.has(t.id));
+    const done = all.filter((t) => byTeam.has(t.id))
+      .map((t) => `${esc(t.name)}: ${byTeam.get(t.id).map((p) => esc((p.nickname || p.full_name) + ' #' + p.number)).join(', ')}`);
+    return `<div class="nom-summary"><b>Captain nominations: ${byTeam.size} of ${all.length} teams submitted.</b>
+      ${missing.length ? `<br>⏳ Waiting: ${missing.map((t) => esc(t.name)).join(', ')}` : ''}
+      ${done.length ? `<br>✓ ${done.join(' · ')}` : ''}
+      <br><a href="captain.html" style="color:var(--gold)">Nominate for a team →</a></div>`;
+  }
+
+  async function renderCaptains() {
+    let rows;
+    try { rows = await api.listCaptains(); }
+    catch (e) { $('captains').innerHTML = '<p class="lb-empty">Run supabase/nominations.sql in Supabase to turn on captains.</p>'; return; }
+    $('captainCount').textContent = `${rows.length} emails · ${new Set(rows.map((r) => r.team_id)).size} of ${window.JFF_TEAMS.length} teams`;
+    const sorted = [...window.JFF_TEAMS].sort((a, b) => a.division.localeCompare(b.division) || a.name.localeCompare(b.name));
+    $('captainTeam').innerHTML = sorted.map((t) => `<option value="${t.id}">${esc(t.name)} (${t.division === 'men' ? "Men's" : "Women's"})</option>`).join('');
+    $('captains').innerHTML = sorted.map((t) => {
+      const mine = rows.filter((r) => r.team_id === t.id);
+      return `<div class="captain-row"><span><b>${esc(t.name)}</b>${mine.length ? '' : '<span style="color:#555">No captain yet</span>'}</span></div>`
+        + mine.map((r) => `<div class="captain-row" style="margin-left:1rem"><span>${esc(r.email)}</span><button class="btn-link" data-uncaptain="${esc(r.team_id)}" data-email="${esc(r.email)}" style="color:#a44">Remove</button></div>`).join('');
+    }).join('');
   }
 
   async function exportCsv(id) {
@@ -71,6 +100,7 @@
       else if (d.reopen) await api.updateWeek(+d.reopen, { closed: false });
       else if (d.extend) { const w = (await api.listWeeks()).find((x) => x.id === +d.extend); await api.updateWeek(w.id, { ends_at: new Date(+new Date(w.ends_at) + 864e5).toISOString() }); }
       else if (d.csv) return exportCsv(+d.csv);
+      else if (d.uncaptain) { if (!confirm(`Remove ${d.email} as captain of ${teams[d.uncaptain].name}?`)) return; await api.removeCaptain(d.uncaptain, d.email); JFF.toast('Captain removed'); return renderCaptains(); }
       else if (d.clear) {
         if (!confirm(`Remove ALL votes in "${d.label}"? The week stays open, and everyone (including you) can vote again. This cannot be undone.`)) return;
         const n = await api.clearVotes(+d.clear);
@@ -90,8 +120,24 @@
     const f = new FormData(e.target);
     const starts_at = fromWib(f.get('starts')), ends_at = fromWib(f.get('ends'));
     if (new Date(ends_at) <= new Date(starts_at)) return JFF.toast('Close time must be after open time', 'error');
-    try { await api.createWeek({ label: f.get('label').trim(), starts_at, ends_at }); e.target.reset(); setDefaults(); JFF.toast('Week created'); render(); }
+    try { await api.createWeek({ label: f.get('label').trim(), starts_at, ends_at, nominations: f.get('nominations') === 'on' }); e.target.reset(); setDefaults(); JFF.toast('Week created'); render(); }
     catch (err) { JFF.toast(err.message, 'error'); }
+  });
+
+  $('newCaptain').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const team = f.get('team'), email = String(f.get('email')).trim().toLowerCase();
+    try {
+      const existing = (await api.listCaptains()).filter((r) => r.team_id === team);
+      if (existing.some((r) => r.email === email)) return JFF.toast('Already a captain of this team');
+      if (existing.length >= 2 && !confirm(`${teams[team].name} already has ${existing.length} captains. Add ${email} as another one?`)) return;
+      await api.addCaptain(team, email);
+      e.target.email.value = ''; JFF.toast(`Added ${email} to ${teams[team].name}`); renderCaptains();
+    } catch (err) { JFF.toast(err.message, 'error'); }
+  });
+  $('newWeek').nominations.addEventListener('change', (e) => {
+    $('startsLabel').textContent = e.target.checked ? 'Voting opens · nominations close (WIB)' : 'Opens (WIB)';
   });
 
   function setDefaults() {
@@ -116,7 +162,7 @@
     }
     $('gate').innerHTML = `<div class="auth-bar" style="margin-bottom:1.5rem"><p>Signed in as <b>${esc(user.email)}</b></p><button class="btn-link" id="signOutA">Sign out</button></div>`;
     $('adminBody').style.display = 'block';
-    setDefaults(); render();
+    setDefaults(); render(); renderCaptains();
   }
 
   api.onAuthChange(gate);

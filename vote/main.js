@@ -7,7 +7,7 @@
 
   const params = new URLSearchParams(location.search);
   const S = {
-    user: null, weeks: [], week: null, myVotes: {}, board: [], voters: 0,
+    user: null, weeks: [], week: null, myVotes: {}, board: [], voters: 0, noms: null,
     cat: CATEGORIES.includes(params.get('c')) ? params.get('c') : 'men_offense',
     invite: players[params.get('p')] || null,
     search: '', team: '', showAll: false, pending: null,
@@ -53,7 +53,7 @@
     const st = $('weekStatus');
     if (!S.week) { st.className = 'status-pill'; st.textContent = 'Not started'; }
     else if (open()) { st.className = 'status-pill open'; st.textContent = 'Voting open'; }
-    else if (!S.week.closed && Date.now() < +new Date(S.week.starts_at)) { st.className = 'status-pill'; st.textContent = 'Opens ' + JFF.fmtDate(S.week.starts_at); }
+    else if (!S.week.closed && Date.now() < +new Date(S.week.starts_at)) { st.className = 'status-pill'; st.textContent = (S.week.nominations ? 'Captains nominating · voting opens ' : 'Opens ') + JFF.fmtDate(S.week.starts_at); }
     else { st.className = 'status-pill'; st.textContent = 'Voting closed'; }
     $('voterCount').textContent = S.voters.toLocaleString('en-US');
     tick();
@@ -106,9 +106,10 @@
     const q = S.search.trim().toLowerCase();
     const mine = S.myVotes[S.cat];
     const list = window.JFF_PLAYERS.filter((p) => p.division === division() && (!S.team || p.team === S.team)
+      && (!S.noms || S.noms.has(p.id))
       && (!q || [p.full_name, p.nickname, p.number, teams[p.team].name, p.position].join(' ').toLowerCase().includes(q)));
     $('gridTitle').textContent = CATEGORY_LABEL[S.cat];
-    $('gridCount').textContent = `${list.length} players`;
+    $('gridCount').textContent = `${list.length} ${S.noms ? (list.length === 1 ? 'nominee' : 'nominees') : 'players'}`;
     const byTeam = new Map();
     for (const p of list) { if (!byTeam.has(p.team)) byTeam.set(p.team, []); byTeam.get(p.team).push(p); }
     // Within each team: by jersey number (0, 00, 1, 2 … 99); players without a number go last.
@@ -118,7 +119,7 @@
       const isMine = mine === p.id;
       const btn = isMine ? '<button class="pc-vote is-mine" disabled>✓ Your vote</button>'
         : mine ? '<button class="pc-vote" disabled>Voted</button>'
-        : !open() ? '<button class="pc-vote" disabled>Closed</button>'
+        : !open() ? `<button class="pc-vote" disabled>${notStarted() ? 'Opens soon' : 'Closed'}</button>`
         : `<button class="pc-vote" data-vote="${p.id}">Vote</button>`;
       return `<article class="player-card ${isMine ? 'voted' : mine ? 'dim' : ''} ${S.invite?.id === p.id ? 'highlight' : ''}" id="pc-${p.id}">
         <div class="pc-top"><span class="pc-num">${esc(p.number)}</span><span class="pc-pos ${p.position ? '' : 'empty'}">${esc(p.position || 'Pos TBA')}</span></div>
@@ -126,11 +127,22 @@
         <div class="pc-actions">${btn}<button class="pc-share" data-share="${p.id}" title="Share ${esc(p.nickname)}'s vote link" aria-label="Share">${SHARE_ICON}</button></div>
       </article>`;
     };
-    $('playerGroups').innerHTML = list.length ? [...byTeam].map(([tid, ps]) => `<div class="team-group">
-        <div class="team-group-head">${JFF.logoHtml(teams[tid])}<h3>${esc(teams[tid].name)}</h3><small>${ps.length} players</small></div>
-        <div class="players-grid">${ps.map(card).join('')}</div></div>`).join('')
+    // Nominations week: say which teams' captains haven't picked yet.
+    let waiting = '';
+    if (S.noms && !q && S.week && !S.week.closed && Date.now() < +new Date(S.week.ends_at)) {
+      const nominated = new Set([...S.noms].map((id) => players[id]?.team));
+      const missing = window.JFF_TEAMS.filter((t) => t.division === division() && (!S.team || t.id === S.team) && !nominated.has(t.id));
+      if (missing.length) waiting = `<p class="nom-waiting">Waiting for nominees from <b>${missing.map((t) => esc(t.name)).join(', ')}</b>. Their players appear here as soon as their captain submits.</p>`;
+    }
+    const empty = S.noms && !q
+      ? `<p class="no-results">No nominees yet. Team captains pick 1–2 players after each gameday${notStarted() ? `, and voting opens ${esc(JFF.fmtDate(S.week.starts_at))}` : ''}.</p>`
       : '<p class="no-results">No players match your search.</p>';
+    $('playerGroups').innerHTML = waiting + (list.length ? [...byTeam].map(([tid, ps]) => `<div class="team-group">
+        <div class="team-group-head">${JFF.logoHtml(teams[tid])}<h3>${esc(teams[tid].name)}</h3><small>${ps.length} ${S.noms ? (ps.length === 1 ? 'nominee' : 'nominees') : (ps.length === 1 ? 'player' : 'players')}</small></div>
+        <div class="players-grid">${ps.map(card).join('')}</div></div>`).join('')
+      : empty);
   }
+  const notStarted = () => !!S.week && !S.week.closed && Date.now() < +new Date(S.week.starts_at);
 
   function renderBanners() {
     $('demoBanner').innerHTML = api.demo
@@ -144,16 +156,26 @@
   function renderAll() { renderBanners(); renderAuth(); renderWeek(); renderTabs(); renderTeamFilter(); renderPlayers(); renderBoard(); }
 
   // ─── DATA ─────────────────────────────────────────────
+  async function loadNoms() {
+    if (!S.week?.nominations) { S.noms = null; return false; }
+    const rows = await api.listNominations(S.week.id);
+    const next = new Set(rows.map((r) => r.player_id));
+    const changed = !S.noms || next.size !== S.noms.size || [...next].some((id) => !S.noms.has(id));
+    S.noms = next;
+    return changed;
+  }
   async function refreshBoard() {
     if (!S.week) return;
     try {
+      if (S.week.nominations && await loadNoms()) renderPlayers();
       [S.board, S.voters] = await Promise.all([api.leaderboard(S.week.id), api.voterCount(S.week.id)]);
       renderBoard(); $('voterCount').textContent = Number(S.voters).toLocaleString('en-US');
     } catch (e) { console.error(e); }
   }
   async function loadWeek() {
     S.myVotes = S.week ? await api.myVotes(S.week.id) : {};
-    S.board = []; S.voters = 0;
+    S.board = []; S.voters = 0; S.noms = null;
+    try { await loadNoms(); } catch (e) { console.error(e); }
     renderAll(); await refreshBoard(); renderWeek();
   }
 
