@@ -210,7 +210,7 @@
         || [...weeks].filter((w) => !w.closed && +new Date(w.starts_at) > now).sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))[0]
         || weeks[0] || null;
     },
-    fmtDate(d) { return new Date(d).toLocaleString('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' WIB'; },
+    fmtDate(d) { return new Date(d).toLocaleString(window.JFFI18N?.lang === 'id' ? 'id-ID' : 'en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' WIB'; },
     esc(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
     initials(name) { return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase(); },
     logoHtml(team, cls = 'team-logo') {

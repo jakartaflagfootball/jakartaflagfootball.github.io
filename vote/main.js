@@ -227,7 +227,7 @@
       ? (votedCount() < 4 ? `Now get your friends to vote too. You still have ${4 - votedCount()} ${4 - votedCount() === 1 ? 'category' : 'categories'} left.` : "You've voted in all 4 categories. Now get your friends to vote.")
       : `Send ${p.nickname || 'their'} vote link to your group chats.`;
     $('sharePlayer').innerHTML = playerChip(p);
-    const url = shareUrl(pid, cat), text = shareText(p, cat, voted);
+    const url = shareUrl(pid, cat), text = window.JFFI18N ? JFFI18N.t(shareText(p, cat, voted)) : shareText(p, cat, voted);
     $('shareWa').onclick = () => window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
     $('shareCopy').onclick = async () => {
       try { await navigator.clipboard.writeText(url); JFF.toast('Link copied'); }

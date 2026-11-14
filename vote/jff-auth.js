@@ -143,7 +143,7 @@ window.JFFAuth = (function () {
       el.innerHTML = '';
       google.accounts.id.renderButton(el, {
         type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular',
-        text, logo_alignment: 'left', width: Math.max(220, Math.min(320, el.clientWidth || 320)),
+        text, logo_alignment: 'left', locale: document.documentElement.lang === 'id' ? 'id' : 'en', width: Math.max(220, Math.min(320, el.clientWidth || 320)),
       });
     } catch (e) {
       console.warn(e); fallback(el);
