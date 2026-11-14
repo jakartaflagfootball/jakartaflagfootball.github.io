@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LX5D460YS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-2LX5D460YS');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corporate Sessions — Jakarta Flag Football</title>
+<meta name="description" content="Flag football team-building sessions for companies in Jakarta. No experience needed, non-contact, run by Jakarta Flag Football coaches.">
+<!-- TEMPLATE: remove this line when the page is ready to be found by Google -->
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Corporate Sessions — Jakarta Flag Football">
+<meta property="og:description" content="Flag football team-building for companies in Jakarta. No experience needed.">
+<meta property="og:image" content="https://jakartaflagfootball.com/photo-assets/corporate/hero.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ─── TEMPLATE MARKERS ───────────────────────────
+   Anything wrapped in <span class="fill"> is a placeholder.
+   Replace the text and delete the span. Once none are left,
+   delete this block and the .template-banner element. */
+.fill {
+  outline: 1px dashed var(--gold);
+  outline-offset: 2px;
+  background: rgba(201,168,76,0.10);
+  color: var(--gold);
+  border-radius: 2px;
+}
+.template-banner {
+  position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%);
+  z-index: 200; background: var(--surface2); border: 1px dashed var(--gold);
+  color: var(--gold); font-size: 0.75rem; padding: 0.45rem 0.9rem; border-radius: 6px;
+  max-width: calc(100% - 2rem); text-align: center;
+}
+
+/* ─── HERO ─── */
+.corp-hero { padding: 8rem 2rem 4.5rem; position: relative; overflow: hidden; min-height: 78vh; display: flex; align-items: flex-end; }
+.corp-hero .about-hero-photo { background: var(--surface); }
+.corp-hero-text { position: relative; z-index: 1; max-width: 680px; }
+.corp-label {
+  font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1rem; font-weight: 500;
+}
+.corp-hero h1 {
+  font-family: var(--font-display); font-size: clamp(3.2rem, 9vw, 6.5rem);
+  line-height: 0.95; letter-spacing: 0.03em; margin-bottom: 1.4rem;
+}
+.corp-hero h1 em { font-style: normal; color: var(--accent-bright); }
+.corp-hero-sub { color: #ccc; font-size: 1.05rem; line-height: 1.7; margin-bottom: 2rem; max-width: 560px; }
+.corp-hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* ─── NUMBERS ─── */
+.corp-numbers {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.corp-num { padding: 1.75rem 1rem; text-align: center; border-right: 1px solid var(--border); }
+.corp-num:last-child { border-right: none; }
+.corp-num b { display: block; font-family: var(--font-display); font-size: 2.6rem; line-height: 1; color: var(--text); letter-spacing: 0.03em; }
+.corp-num > span { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+/* ─── BODY ─── */
+.corp-body { max-width: 1040px; margin: 0 auto; padding: 5rem 2rem 6rem; }
+.section-label {
+  font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin-bottom: 0.6rem;
+}
+.section-title {
+  font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: 0.04em; line-height: 1; margin-bottom: 1rem;
+}
+.section-intro { color: var(--muted); font-size: 0.98rem; line-height: 1.7; max-width: 620px; margin-bottom: 2.25rem; }
+.divider { border: none; height: 1px; background: var(--border); margin: 5rem 0; }
+
+/* Why */
+.why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+.why-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.6rem; }
+.why-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.45rem; }
+.why-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+.why-num { font-family: var(--font-display); color: var(--accent); font-size: 1.3rem; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+
+/* Packages */
+.pkg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; align-items: stretch; }
+.pkg {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1.75rem 1.5rem; display: flex; flex-direction: column; position: relative;
+}
+.pkg.featured { border-color: var(--accent); }
+.pkg-tag {
+  position: absolute; top: -0.7rem; left: 1.5rem; background: var(--accent); color: #fff;
+  font-size: 0.65rem; letter-spacing: 0.16em; text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 3px; font-weight: 600;
+}
+.pkg h3 { font-family: var(--font-display); font-size: 1.9rem; letter-spacing: 0.04em; line-height: 1; margin-bottom: 0.4rem; }
+.pkg-meta { font-size: 0.8rem; color: var(--gold); margin-bottom: 1rem; }
+.pkg p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.1rem; }
+.pkg ul { list-style: none; margin-bottom: 1.5rem; flex: 1; }
+.pkg li { font-size: 0.85rem; color: #ccc; padding: 0.4rem 0 0.4rem 1.3rem; position: relative; border-top: 1px solid var(--border); }
+.pkg li::before { content: '✓'; position: absolute; left: 0; color: var(--accent-bright); font-size: 0.8rem; }
+.pkg-price { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 0.04em; margin-bottom: 1rem; }
+.pkg-price small { font-family: var(--font-body); font-size: 0.75rem; color: var(--muted); letter-spacing: 0; }
+.pkg .btn-primary, .pkg .btn-secondary { text-align: center; }
+
+/* Agenda */
+.agenda { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+.timeline { position: relative; padding-left: 2rem; }
+.timeline::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px;
+  background: linear-gradient(to bottom, var(--accent), var(--gold), transparent);
+}
+.timeline-item { position: relative; margin-bottom: 2rem; }
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -2.45rem; top: 6px; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 0 2px var(--accent);
+}
+.timeline-item:last-child::before { background: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.timeline-time { font-family: var(--font-display); font-size: 1.2rem; color: var(--gold); letter-spacing: 0.08em; line-height: 1; margin-bottom: 0.3rem; }
+.timeline-title { font-size: 0.98rem; font-weight: 600; margin-bottom: 0.3rem; }
+.timeline-desc { font-size: 0.86rem; color: var(--muted); line-height: 1.6; }
+
+/* Photo slots: drop a file with the matching name into photo-assets/corporate/ and it appears. */
+.photo-slot {
+  position: relative; overflow: hidden; border-radius: 10px; background: var(--surface);
+  border: 1px dashed var(--border); aspect-ratio: 4/3; margin: 0;
+}
+.photo-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.photo-slot figcaption {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: 1rem; font-size: 0.75rem; color: var(--muted); line-height: 1.5;
+}
+.photo-slot figcaption code { color: var(--gold); font-size: 0.72rem; }
+.agenda .photo-slot { aspect-ratio: 4/5; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.photo-grid .photo-slot:first-child { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
+
+/* Clients */
+.logo-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; }
+.logo-slot {
+  aspect-ratio: 3/2; border: 1px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; color: var(--muted); text-align: center; padding: 0.5rem; background: var(--surface); position: relative; overflow: hidden;
+}
+.logo-slot img { position: absolute; inset: 15%; width: 70%; height: 70%; object-fit: contain; filter: grayscale(1) brightness(1.6); opacity: 0.85; z-index: 1; }
+.logo-slot:has(img) { border-style: solid; }
+.logo-slot:has(img) > span, .photo-slot:has(img) figcaption { display: none; }
+.photo-slot:has(img) { border-style: solid; }
+
+/* Testimonials */
+.quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.quote { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; }
+.quote blockquote { font-size: 1rem; line-height: 1.7; color: #ddd; margin-bottom: 1.25rem; }
+.quote blockquote::before { content: '“'; display: block; font-family: var(--font-display); font-size: 3rem; line-height: 0.6; color: var(--accent); margin-bottom: 0.5rem; }
+.quote-who { font-size: 0.85rem; font-weight: 600; }
+.quote-who span { display: block; font-weight: 400; color: var(--muted); font-size: 0.78rem; }
+
+/* FAQ */
+.faq details { border-top: 1px solid var(--border); padding: 1.1rem 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { cursor: pointer; font-weight: 600; font-size: 0.98rem; list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; color: var(--accent-bright); font-size: 1.2rem; line-height: 1; }
+.faq details[open] summary::after { content: '–'; }
+.faq details p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; margin-top: 0.6rem; max-width: 760px; }
+
+/* Contact */
+.join-cta {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 3rem; text-align: center; position: relative; overflow: hidden;
+}
+.join-cta::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(192,57,43,0.14) 0%, transparent 70%);
+}
+.join-cta > * { position: relative; }
+.join-cta h2 { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: 0.04em; line-height: 1; margin-bottom: 0.75rem; }
+.join-cta p { color: var(--muted); margin: 0 auto 2rem; font-size: 1rem; max-width: 560px; }
+.join-cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.contact-lines { margin-top: 1.5rem; font-size: 0.85rem; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .pkg-grid { grid-template-columns: 1fr; max-width: 480px; }
+  .logo-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .corp-hero { padding: 7rem 1.25rem 3rem; min-height: 70vh; }
+  .corp-numbers { grid-template-columns: repeat(2, 1fr); }
+  .corp-num:nth-child(2) { border-right: none; }
+  .corp-num:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .corp-body { padding: 3.5rem 1.25rem 5rem; }
+  .divider { margin: 3.5rem 0; }
+  .why-grid, .quote-grid, .agenda { grid-template-columns: 1fr; }
+  .agenda { gap: 2rem; }
+  .photo-grid { grid-template-columns: 1fr 1fr; }
+  .join-cta { padding: 2rem 1.25rem; }
+}
+</style>
+<link rel="icon" type="image/png" href="jff-logo.png">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">Jakarta Flag Football<span>Stats Hub</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="corporate.html" class="active">Corporate</a>
+    <a href="vote/" class="nav-vote">Vote</a>
+    <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
+  </div>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-header">
+    <div class="nav-drawer-logo">
+      <img src="jff-logo.png" alt="JFF">
+      <span>JFF Stats</span>
+    </div>
+    <button class="nav-drawer-close" id="navDrawerClose">✕</button>
+  </div>
+  <nav class="nav-drawer-links" id="navDrawerLinks">
+    <a href="index.html">Home</a>
+    <a href="teams.html">Teams</a>
+    <a href="players.html">Players</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="about.html">About</a>
+    <a href="corporate.html">Corporate Sessions</a>
+    <a href="vote/" class="drawer-vote">Vote: Player of the Week</a>
+    <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
+  </nav>
+</div>
+<div class="nav-drawer-overlay" id="navOverlay"></div>
+
+<!-- ═════ HERO ═════
+     Photo: photo-assets/corporate/hero.jpg (landscape, ideally a group shot mid-game).
+     Until it exists, a JFF community photo is shown instead. -->
+<header class="corp-hero">
+  <div class="about-hero-photo">
+    <img src="photo-assets/corporate/hero.jpg" alt="Corporate flag football session"
+         onerror="this.onerror=null;this.src='photo-assets/2025/Open%20SZN%203/@PAULUSARDE%20%282062%20of%202493%29.jpg'">
+  </div>
+  <div class="corp-hero-text">
+    <div class="corp-label">Corporate Sessions · Jakarta Flag Football</div>
+    <h1>GET YOUR TEAM<br><em>OFF THEIR DESKS</em></h1>
+    <p class="corp-hero-sub">
+      Flag football team-building for companies in Jakarta. We bring the coaches, flags and balls.
+      Your people bring nothing but sports shoes. No experience needed, no tackling, and by the end of the session they're calling plays together.
+    </p>
+    <div class="corp-hero-btns">
+      <a href="#contact" class="btn-primary">Book a Session</a>
+      <a href="#formats" class="btn-secondary">See Formats</a>
+    </div>
+  </div>
+</header>
+
+<!-- ═════ NUMBERS ═════ -->
+<section class="corp-numbers" aria-label="Corporate sessions in numbers">
+  <div class="corp-num"><b><span class="fill">[00]</span></b><span>Companies hosted</span></div>
+  <div class="corp-num"><b><span class="fill">[000]+</span></b><span>Employees coached</span></div>
+  <div class="corp-num"><b><span class="fill">[00]</span></b><span>Sessions run</span></div>
+  <div class="corp-num"><b><span class="fill">[4.9]/5</span></b><span>Participant rating</span></div>
+</section>
+
+<main class="corp-body">
+
+  <!-- ═════ WHY ═════ -->
+  <div class="section-label">Why Flag Football</div>
+  <h2 class="section-title">BUILT FOR TEAMS THAT DON'T PLAY SPORTS</h2>
+  <p class="section-intro">
+    Most team-building is either a lecture or a game only the sporty people enjoy. Flag football sits in between:
+    it's physical enough to get people moving and structured enough that the quiet analyst can run the offence.
+  </p>
+
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-num">01</div>
+      <h3>Nobody starts ahead</h3>
+      <p>Almost no one in Indonesia has played American football. Your CEO and your intern learn the rules at the same time, which levels the room fast.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-num">02</div>
+      <h3>No contact, no injuries</h3>
+      <p>Defenders pull a flag instead of tackling. Mixed teams, different fitness levels and different ages all play on the same field safely.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-num">03</div>
+      <h3>Every play is a meeting</h3>
+      <p>Before each down, the team huddles, picks a play and assigns roles in 25 seconds. It's the clearest lesson in communication and trust you'll find on grass.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-num">04</div>
+      <h3>An Olympic sport</h3>
+      <p>Flag football debuts at the LA 2028 Olympics. Your team gets to try the sport Indonesia's national players are training for, coached by people from that same community.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ FORMATS ═════ -->
+  <div id="formats" class="section-label">Formats</div>
+  <h2 class="section-title">PICK A SESSION</h2>
+  <p class="section-intro">All formats include JFF coaches, flags, balls, cones and bibs. We can run it at your venue or book a field for you.</p>
+
+  <div class="pkg-grid">
+    <div class="pkg">
+      <h3>TASTER</h3>
+      <div class="pkg-meta"><span class="fill">[90 minutes]</span> · <span class="fill">[10–30]</span> people</div>
+      <p>An intro session for teams who want to try something new on a weekday evening or a Saturday morning.</p>
+      <ul>
+        <li>Warm-up and flag-pulling basics</li>
+        <li>Throwing and catching stations</li>
+        <li>Short mini-games, everyone plays</li>
+        <li><span class="fill">[Add or remove items]</span></li>
+      </ul>
+      <div class="pkg-price"><span class="fill">[IDR 0.000.000]</span> <small>per session</small></div>
+      <a href="#contact" class="btn-secondary">Ask About Taster</a>
+    </div>
+
+    <div class="pkg featured">
+      <div class="pkg-tag">Most booked</div>
+      <h3>TEAM DAY</h3>
+      <div class="pkg-meta"><span class="fill">[3 hours]</span> · <span class="fill">[20–60]</span> people</div>
+      <p>Coaching first, then a mini tournament between departments, with a final and an awards ceremony.</p>
+      <ul>
+        <li>Everything in Taster</li>
+        <li>Teams by department or mixed</li>
+        <li>Round-robin and final, refereed by JFF</li>
+        <li>MVP and team awards</li>
+        <li>Photographer <span class="fill">[optional?]</span></li>
+      </ul>
+      <div class="pkg-price"><span class="fill">[IDR 0.000.000]</span> <small>per event</small></div>
+      <a href="#contact" class="btn-primary">Book Team Day</a>
+    </div>
+
+    <div class="pkg">
+      <h3>CORPORATE LEAGUE</h3>
+      <div class="pkg-meta"><span class="fill">[4–8 weeks]</span> · multiple companies</div>
+      <p>A weekly league where your company fields a team against other companies. For offices that want a regular habit, not a one-off.</p>
+      <ul>
+        <li>Weekly coached practice and games</li>
+        <li>Standings and stats on this site</li>
+        <li>Jerseys <span class="fill">[included?]</span></li>
+        <li>Finals day with trophies</li>
+      </ul>
+      <div class="pkg-price"><span class="fill">[IDR 0.000.000]</span> <small>per team</small></div>
+      <a href="#contact" class="btn-secondary">Register Interest</a>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ AGENDA ═════ -->
+  <div class="section-label">How It Runs</div>
+  <h2 class="section-title">A TEAM DAY, HOUR BY HOUR</h2>
+  <p class="section-intro">A typical 3-hour session. We adjust it to your group's size, fitness and schedule.</p>
+
+  <div class="agenda">
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-time"><span class="fill">[0:00]</span></div>
+        <div class="timeline-title">Welcome and warm-up</div>
+        <div class="timeline-desc">Flag belts on, a quick rules talk and movement drills that double as icebreakers.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time"><span class="fill">[0:20]</span></div>
+        <div class="timeline-title">Skill stations</div>
+        <div class="timeline-desc">Small groups rotate through throwing, catching, flag-pulling and route running with a JFF coach at each station.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time"><span class="fill">[1:00]</span></div>
+        <div class="timeline-title">Draw up your plays</div>
+        <div class="timeline-desc">Each team picks a name and a captain, then designs two plays on a whiteboard. This is where the planners shine.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time"><span class="fill">[1:20]</span></div>
+        <div class="timeline-title">Mini tournament</div>
+        <div class="timeline-desc">Short games, JFF referees, rotating matchups so everyone plays everyone.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time"><span class="fill">[2:40]</span></div>
+        <div class="timeline-title">Final, awards and group photo</div>
+        <div class="timeline-desc">Top two teams play the final in front of everyone. MVP, best play and spirit awards to close.</div>
+      </div>
+    </div>
+    <figure class="photo-slot">
+      <img src="photo-assets/corporate/agenda.jpg" alt="Coach explaining a play to a corporate team" onerror="this.remove()">
+      <figcaption>Portrait photo: a coach with a huddle<br><code>photo-assets/corporate/agenda.jpg</code></figcaption>
+    </figure>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ PHOTOS ═════
+       Drop files named 1.jpg … 7.jpg into photo-assets/corporate/. The first one is shown large. -->
+  <div class="section-label">From the Field</div>
+  <h2 class="section-title">PAST SESSIONS</h2>
+  <p class="section-intro"><span class="fill">[One line about recent sessions, e.g. "Photos from sessions with Company A, Company B and Company C."]</span></p>
+
+  <div class="photo-grid">
+    <figure class="photo-slot"><img src="photo-assets/corporate/1.jpg" alt="" onerror="this.remove()"><figcaption>Best photo (shown large)<br><code>photo-assets/corporate/1.jpg</code></figcaption></figure>
+    <figure class="photo-slot"><img src="photo-assets/corporate/2.jpg" alt="" onerror="this.remove()"><figcaption><code>2.jpg</code></figcaption></figure>
+    <figure class="photo-slot"><img src="photo-assets/corporate/3.jpg" alt="" onerror="this.remove()"><figcaption><code>3.jpg</code></figcaption></figure>
+    <figure class="photo-slot"><img src="photo-assets/corporate/4.jpg" alt="" onerror="this.remove()"><figcaption><code>4.jpg</code></figcaption></figure>
+    <figure class="photo-slot"><img src="photo-assets/corporate/5.jpg" alt="" onerror="this.remove()"><figcaption><code>5.jpg</code></figcaption></figure>
+    <figure class="photo-slot"><img src="photo-assets/corporate/6.jpg" alt="" onerror="this.remove()"><figcaption><code>6.jpg</code></figcaption></figure>
+    <figure class="photo-slot"><img src="photo-assets/corporate/7.jpg" alt="" onerror="this.remove()"><figcaption><code>7.jpg</code></figcaption></figure>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ CLIENTS ═════
+       Logos: photo-assets/corporate/logos/logo-1.png … logo-6.png (transparent PNG works best).
+       Get each company's permission before showing its logo. -->
+  <div class="section-label">Who's Played</div>
+  <h2 class="section-title">COMPANIES WE'VE HOSTED</h2>
+
+  <div class="logo-row">
+    <div class="logo-slot"><img src="photo-assets/corporate/logos/logo-1.png" alt="" onerror="this.remove()"><span class="fill">[Company 1]</span></div>
+    <div class="logo-slot"><img src="photo-assets/corporate/logos/logo-2.png" alt="" onerror="this.remove()"><span class="fill">[Company 2]</span></div>
+    <div class="logo-slot"><img src="photo-assets/corporate/logos/logo-3.png" alt="" onerror="this.remove()"><span class="fill">[Company 3]</span></div>
+    <div class="logo-slot"><img src="photo-assets/corporate/logos/logo-4.png" alt="" onerror="this.remove()"><span class="fill">[Company 4]</span></div>
+    <div class="logo-slot"><img src="photo-assets/corporate/logos/logo-5.png" alt="" onerror="this.remove()"><span class="fill">[Company 5]</span></div>
+    <div class="logo-slot"><img src="photo-assets/corporate/logos/logo-6.png" alt="" onerror="this.remove()"><span class="fill">[Company 6]</span></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ TESTIMONIALS ═════ -->
+  <div class="section-label">What They Said</div>
+  <h2 class="section-title">FROM THE PEOPLE WHO BOOKED US</h2>
+
+  <div class="quote-grid">
+    <figure class="quote">
+      <blockquote><span class="fill">[Quote from an HR lead or manager. Best if it names something specific that happened, e.g. "Our finance team beat the sales team in the final and nobody has stopped talking about it."]</span></blockquote>
+      <figcaption class="quote-who"><span class="fill">[Name]</span><span><span class="fill">[Role, Company]</span></span></figcaption>
+    </figure>
+    <figure class="quote">
+      <blockquote><span class="fill">[Quote from a participant. Something about trying it for the first time works well.]</span></blockquote>
+      <figcaption class="quote-who"><span class="fill">[Name]</span><span><span class="fill">[Role, Company]</span></span></figcaption>
+    </figure>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ FAQ ═════ -->
+  <div class="section-label">Questions</div>
+  <h2 class="section-title">BEFORE YOU BOOK</h2>
+
+  <div class="faq">
+    <details>
+      <summary>Do our people need any experience?</summary>
+      <p>None. We assume nobody has held an American football before. The coaching is built for complete beginners.</p>
+    </details>
+    <details>
+      <summary>Is it safe? We have mixed ages and fitness levels.</summary>
+      <p>Yes. Flag football has no tackling or blocking. We size the games and rest breaks to the group, and anyone can sit out a round.</p>
+    </details>
+    <details>
+      <summary>Where do sessions happen?</summary>
+      <p><span class="fill">[Your usual fields and areas, e.g. "We can book a turf field in South Jakarta, or come to your company's own field or a park nearby."]</span></p>
+    </details>
+    <details>
+      <summary>What should participants wear?</summary>
+      <p>Sports clothes and running shoes or turf shoes. No metal studs. We provide flags, balls and bibs. <span class="fill">[Water and snacks provided?]</span></p>
+    </details>
+    <details>
+      <summary>How many people can join?</summary>
+      <p><span class="fill">[Minimum and maximum group size, and how many coaches you bring per number of participants.]</span></p>
+    </details>
+    <details>
+      <summary>What happens if it rains?</summary>
+      <p><span class="fill">[Rain policy: play through light rain, reschedule, or indoor venue option.]</span></p>
+    </details>
+    <details>
+      <summary>Is the session in Bahasa Indonesia or English?</summary>
+      <p>Either, or both. Our coaches run sessions in Bahasa Indonesia and English.</p>
+    </details>
+    <details>
+      <summary>How far in advance should we book?</summary>
+      <p><span class="fill">[Lead time, e.g. "Two to three weeks for a Team Day. Weekend slots go first."]</span></p>
+    </details>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ═════ CONTACT ═════ -->
+  <div id="contact" class="join-cta">
+    <div class="corp-label">Book a Session</div>
+    <h2>BRING YOUR TEAM<br>TO THE FIELD</h2>
+    <p>Tell us your group size, preferred dates and what you want out of the day. We'll reply with a plan and a quote.</p>
+    <div class="join-cta-btns">
+      <!-- Replace 62XXXXXXXXXX with the WhatsApp number, country code first, no + or spaces -->
+      <a href="https://wa.me/62XXXXXXXXXX?text=Hi%20JFF%2C%20I'd%20like%20to%20ask%20about%20a%20corporate%20session." target="_blank" rel="noopener" class="btn-primary">WhatsApp Us</a>
+      <a href="mailto:corporate@example.com?subject=Corporate%20flag%20football%20session" class="btn-secondary">Email Us</a>
+    </div>
+    <div class="contact-lines">
+      <span class="fill">[WhatsApp number]</span> · <span class="fill">[email address]</span> ·
+      <a href="https://www.instagram.com/jakartaflagfootball/" target="_blank" rel="noopener">@jakartaflagfootball</a>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo"><img src="jff-logo.png" alt="JFF"></div>
+    <p>Jakarta Flag Football · Est. 2022</p>
+    <p class="footer-small"><a href="privacy.html">Privacy</a></p>
+  </div>
+</footer>
+
+<!-- TEMPLATE: delete this banner once every gold placeholder is filled -->
+<div class="template-banner">Template preview · gold dashed text is placeholder content</div>
+
+<script>
+(function() {
+  var burger = document.getElementById('navBurger');
+  var drawer = document.getElementById('navDrawer');
+  var overlay = document.getElementById('navOverlay');
+  var closeBtn = document.getElementById('navDrawerClose');
+  if (!burger) return;
+  var page = window.location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('#navDrawerLinks a').forEach(function(a) {
+    if (a.getAttribute('href') === page) a.classList.add('active');
+  });
+  function openDrawer() { drawer.classList.add('open'); overlay.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); document.body.style.overflow = ''; }
+  burger.addEventListener('click', openDrawer);
+  overlay.addEventListener('click', closeDrawer);
+  closeBtn.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDrawer(); });
+})();
+</script>
+</body>
+</html>
