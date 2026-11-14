@@ -317,6 +317,3 @@ button:disabled { cursor: default; }
 .photo-meta small { color: var(--muted); font-size: .75rem; }
 .photo-meta .btn-sm { width: 100%; justify-content: center; }
 .photo-tip { color: var(--muted); font-size: .8rem; margin-bottom: 2rem; }
-/* Room for the EN/ID switch on small phones */
-@media (max-width: 480px) { .nav-links a[href="#how"] { display: none; } }
-.nav-links a { white-space: nowrap; }
