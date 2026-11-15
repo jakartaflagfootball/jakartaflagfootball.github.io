@@ -561,7 +561,7 @@ window.JFF_PLAYERS = [
   "full_name": "Shabrina Putri Rizki",
   "nickname": "Sasa",
   "number": "6",
-  "position": "WR"
+  "position": "WR/DB"
  },
  {
   "id": "orcas-67-maria",
@@ -1300,6 +1300,15 @@ window.JFF_PLAYERS = [
   "nickname": "Bakis",
   "number": "23",
   "position": "DB/PR/WR"
+ },
+ {
+  "id": "basilisk-89-sodok",
+  "team": "basilisk",
+  "division": "men",
+  "full_name": "Muhammad Nafis Shiddiq",
+  "nickname": "Sodok",
+  "number": "89",
+  "position": ""
  },
  {
   "id": "boars-11-faza",
