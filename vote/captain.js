@@ -27,7 +27,7 @@
 
     const changed = S.picked.size !== S.saved.size || [...S.picked].some((p) => !S.saved.has(p));
     let status;
-    if (votingStarted() && S.saved.size >= MAX) status = `<div class="nom-note ok">✓ Your nominees for ${esc(t.name)} are in and voting is open. Nominees can't be changed now. Ask a JFF admin if something is wrong.</div>`;
+    if (votingStarted() && S.saved.size >= MAX) status = `<div class="nom-note ok">✓ Your nominees for ${esc(t.name)} are in and voting is open. Nominees can't be changed now (ask a JFF admin if something is wrong), but you can still update their photos below.</div>`;
     else if (votingStarted() && S.saved.size) status = `<div class="nom-note">Voting is already open. You can still add a second nominee, but nominees can't be removed now.</div>`;
     else if (votingStarted()) status = `<div class="nom-note warn">You're late. Voting already opened, but ${esc(t.name)} can still nominate: your players appear for voting as soon as you submit. Once submitted, they can't be changed.</div>`;
     else if (S.saved.size) status = `<div class="nom-note ok">✓ Submitted. You can still change your picks until ${JFF.fmtDate(S.week.starts_at)}.</div>`;
@@ -56,7 +56,8 @@
   }
 
   // ─── Photos ───
-  const canSetPhoto = (pid) => !votingStarted() || !S.photos[pid];
+  // Photos can be added or changed until voting closes.
+  const canSetPhoto = () => !!S.week && !S.week.closed && Date.now() < +new Date(S.week.ends_at);
   function renderPhotos() {
     const saved = [...S.saved].map((id) => players[id]).filter(Boolean).sort(byNumber);
     if (!saved.length) { $('photos').innerHTML = ''; return; }
@@ -68,7 +69,7 @@
         return `<div class="photo-item">
           <div class="photo-frame">${url ? `<img src="${esc(url)}" alt="${esc(p.nickname || p.full_name)}">` : '<span>No photo</span>'}${busy ? '<i class="photo-busy">Uploading…</i>' : ''}</div>
           <div class="photo-meta"><b>${esc(p.nickname || p.full_name)} #${esc(p.number)}</b>
-            ${canSetPhoto(p.id) ? `<button type="button" class="btn-secondary btn-sm" data-photo="${p.id}" ${can ? '' : 'disabled'}>${url ? 'Change photo' : 'Add photo'}</button>` : '<small>🔒 Locked while voting is open</small>'}
+            ${canSetPhoto(p.id) ? `<button type="button" class="btn-secondary btn-sm" data-photo="${p.id}" ${can ? '' : 'disabled'}>${url ? 'Change photo' : 'Add photo'}</button>` : '<small>🔒 Voting has closed</small>'}
           </div></div>`;
       }).join('')}</div>
       <p class="photo-tip">Use a clear, upright photo of the player, ideally in their jersey. It's cropped to a 4:5 portrait, like an Instagram post.</p>`;

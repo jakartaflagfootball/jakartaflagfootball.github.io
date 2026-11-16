@@ -317,3 +317,59 @@ button:disabled { cursor: default; }
 .photo-meta small { color: var(--muted); font-size: .75rem; }
 .photo-meta .btn-sm { width: 100%; justify-content: center; }
 .photo-tip { color: var(--muted); font-size: .8rem; margin-bottom: 2rem; }
+
+/* ─── OFFENSE / DEFENSE COLORS ─── */
+/* Offense keeps JFF red; Defense is blue, so you can tell them apart at a glance. */
+:root { --off: #c0392b; --off-bright: #e74c3c; --def: #2f7de1; --def-bright: #4a92f0;
+  --side: var(--off); --side-bright: var(--off-bright); --side-soft: rgba(192,57,43,.12); }
+body[data-side="defense"] { --side: var(--def); --side-bright: var(--def-bright); --side-soft: rgba(47,125,225,.14); }
+
+.cat-tab[data-side="offense"] { box-shadow: inset 4px 0 0 var(--off); }
+.cat-tab[data-side="defense"] { box-shadow: inset 4px 0 0 var(--def); }
+.cat-tab[data-side="offense"] .cat-tab-name { color: var(--off-bright); }
+.cat-tab[data-side="defense"] .cat-tab-name { color: var(--def-bright); }
+.cat-tab.active[data-side="offense"] { border-color: var(--off); background: rgba(192,57,43,.14); }
+.cat-tab.active[data-side="defense"] { border-color: var(--def); background: rgba(47,125,225,.16); }
+.cat-tab:not(.active) { opacity: .7; }
+.cat-tab.active { opacity: 1; }
+
+.side-head { border-bottom-color: var(--side); }
+.side-head h2 { color: var(--side-bright); }
+.side-head h2::after { background: var(--side); }
+#lbCat { color: var(--side-bright); font-weight: 600; }
+
+.player-card { border-top: 3px solid var(--side); }
+.pc-vote { background: var(--side); }
+.pc-vote:hover:not(:disabled) { background: var(--side-bright); }
+.pc-num { color: var(--side-bright); }
+
+/* Sticky "Voting in" bar */
+.side-bar { position: fixed; left: 0; right: 0; top: var(--nav-h, 62px); z-index: 99;
+  background: rgba(14,14,14,.97); backdrop-filter: blur(12px); border-bottom: 3px solid var(--side);
+  transform: translateY(-110%); visibility: hidden; transition: transform .2s ease, visibility .2s; }
+.side-bar.show { transform: none; visibility: visible; }
+.side-bar-in { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-top: .55rem; padding-bottom: .55rem; }
+.side-bar-label { min-width: 0; line-height: 1.15; }
+.side-bar-label small { display: block; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.side-bar-label b { font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; letter-spacing: .04em; color: var(--side-bright); }
+.side-bar-label span { margin-left: .5rem; font-size: .75rem; color: var(--ok); white-space: nowrap; }
+.side-bar-switch { flex-shrink: 0; padding: .55rem .8rem; border-radius: 4px; font-size: .78rem; border: 1px solid; min-height: 40px; }
+.side-bar-switch b { font-weight: 600; }
+.side-bar-switch[data-side="offense"] { border-color: var(--off); color: var(--off-bright); }
+.side-bar-switch[data-side="defense"] { border-color: var(--def); color: var(--def-bright); }
+
+/* Confirm popup */
+.confirm-kicker { font-size: .72rem !important; letter-spacing: .16em; text-transform: uppercase; margin: 0 0 .2rem !important; padding-right: 2rem; }
+#confirmModal .modal, #signinModal .modal, #shareModal .modal { border-top-color: var(--side); }
+.confirm-title { font-size: 2.3rem !important; }
+.side-word { color: var(--side-bright); }
+#confirmBtn { background: var(--side); }
+#confirmBtn:hover:not(:disabled) { background: var(--side-bright); box-shadow: none; }
+
+@media (max-width: 600px) {
+  .pc-vote { letter-spacing: .04em; font-size: .72rem; padding: .6rem .3rem; min-height: 40px; }
+  .pc-share { width: 34px; }
+  .side-bar-label b { font-size: 1.35rem; }
+  .side-bar-label span { display: block; margin: 0; }
+}
+.lb-row .lb-bar { background: var(--side-soft); }

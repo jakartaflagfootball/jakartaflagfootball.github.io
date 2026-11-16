@@ -29,6 +29,14 @@
   </div>
 </nav>
 
+<!-- Shows which category you're voting in once the tabs scroll away -->
+<div class="side-bar" id="sideBar" aria-hidden="true">
+  <div class="container side-bar-in">
+    <div class="side-bar-label"><small>Voting in</small><b id="sideBarCat"></b><span id="sideBarState"></span></div>
+    <button class="side-bar-switch" id="sideBarSwitch" type="button"></button>
+  </div>
+</div>
+
 <header class="page-header">
   <div class="container">
     <div class="eyebrow" id="seasonLabel">Open SZN IV</div>
@@ -52,7 +60,7 @@
 
   <div class="vote-layout">
     <section>
-      <div class="section-header">
+      <div class="section-header side-head">
         <h2 id="gridTitle">Players</h2>
         <small id="gridCount"></small>
       </div>
@@ -94,8 +102,8 @@
 <div class="modal-back" id="confirmModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <button class="modal-close" data-close>✕</button>
-    <h3 id="confirmTitle">Confirm your vote</h3>
-    <p id="confirmCat"></p>
+    <p class="confirm-kicker" id="confirmCat"></p>
+    <h3 id="confirmTitle" class="confirm-title">Confirm your vote</h3>
     <div class="modal-player" id="confirmPlayer"></div>
     <p style="font-size:.8rem">Votes are final. You can't change it later this week.</p>
     <div class="modal-actions">
@@ -109,7 +117,7 @@
 <div class="modal-back" id="signinModal">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="modal-close" data-close>✕</button>
-    <h3>Sign in to vote</h3>
+    <h3 id="signinTitle">Sign in to vote</h3>
     <p>We use Google sign-in only to make sure each person votes once per category. Your vote is anonymous.</p>
     <div class="modal-player" id="signinPlayer" style="display:none"></div>
     <div class="modal-actions signin-slot" id="modalSignin"></div>
