@@ -75,22 +75,29 @@
 
   // ─── Seeding (guidebook) ─────────────────────────────
   // Men: #1–#3 pool winners, #4–#6 runners-up, #7–#8 the two best 3rd-place teams.
-  // No pool rematches in the quarterfinals: swap #7/#8, or #5/#6.
+  // No pool rematches in the quarterfinals: #7 and #8 (or #5 and #6) trade opponents. Seeds
+  // themselves stay in merit order; only the pairing changes.
+  // `seeds` is the merit order (seed n = seeds[n-1]). `slots` is the bracket order that the
+  // "#n" slots in season.json resolve to (1v8, 2v7, 3v6, 4v5 by position).
   function menSeeds() {
     const firsts = byFinish('men', 1), seconds = byFinish('men', 2), thirds = byFinish('men', 3), fourths = byFinish('men', 4);
-    let seeds = [...firsts, ...seconds, ...thirds.slice(0, 2)];
+    const seeds = [...firsts, ...seconds, ...thirds.slice(0, 2)];
+    let slots = [...seeds];
     const qf = [[0, 7], [1, 6], [2, 5], [3, 4]];
     const clashing = (s, pairs) => pairs.map(([a, b]) => [s[a], s[b]]).find(([x, y]) => x && y && x.pool === y.pool);
     const swaps = [];
     for (const [pairs, i, j] of [[[qf[0], qf[1]], 6, 7], [[qf[2], qf[3]], 4, 5]]) {
-      const c = clashing(seeds, pairs);
+      const c = clashing(slots, pairs);
       if (!c) continue;
-      const s = [...seeds]; [s[i], s[j]] = [s[j], s[i]]; seeds = s;
+      const s = [...slots]; [s[i], s[j]] = [s[j], s[i]]; slots = s;
       swaps.push({ seeds: [i + 1, j + 1], teams: [c[0].id, c[1].id], pool: c[0].pool });
     }
+    const opp = {};
+    qf.forEach(([a, b]) => { if (slots[a] && slots[b]) { opp[slots[a].id] = slots[b].id; opp[slots[b].id] = slots[a].id; } });
     const tier2 = [thirds[2], ...fourths].filter(Boolean);
-    return { seeds, tier2, thirds, swaps };
+    return { seeds, slots, opp, tier2, thirds, swaps };
   }
+  const menSeedNo = (id) => menSeeds().seeds.findIndex((r) => r.id === id) + 1;
   function womenSeeds() { return table('women', 'A').slice(0, 4); }
 
   // Resolve a playoff slot ("#1", "MT#2", "W#3", "W:MQF1", "L:WSF2") to a team id, or null.
@@ -105,7 +112,7 @@
       return (m[1] === 'W') === homeWon ? h : a;
     }
     if (!projected && !poolDone(d)) return null;
-    if ((m = slot.match(/^#(\d)$/))) return menSeeds().seeds[+m[1] - 1]?.id || null;
+    if ((m = slot.match(/^#(\d)$/))) return menSeeds().slots[+m[1] - 1]?.id || null;
     if ((m = slot.match(/^MT#(\d)$/))) return menSeeds().tier2[+m[1] - 1]?.id || null;
     if ((m = slot.match(/^W#(\d)$/))) return womenSeeds()[+m[1] - 1]?.id || null;
     return null;
@@ -231,15 +238,15 @@
       return `<section class="blk">${head}${seedTable(seedRows(s, (i) => 3 - i, (r) => `${ord(r.rank)} in the pool`, 'vs'), 'Semi')}
         <p class="tiebreak">Semifinals: #1 v #4, #2 v #3.</p></section>`;
     }
-    const { seeds, tier2, swaps } = menSeeds();
+    const { seeds, opp, tier2, swaps } = menSeeds();
     const finish = ['winner', 'runner-up', '3rd · wildcard'];
-    const swapped = Object.fromEntries(swaps.flatMap((w) => [[w.seeds[0], w.seeds[1]], [w.seeds[1], w.seeds[0]]]));
-    const how = (r, i) => `Pool ${r.pool} ${finish[r.rank - 1]}${swapped[i + 1] ? ` · moved from #${swapped[i + 1]}` : ''}`;
-    const notes = swaps.map((w) => `#${w.seeds[0]} and #${w.seeds[1]} swap so ${name(w.teams[0])} and ${name(w.teams[1])} (both Pool ${w.pool}) don't meet again in the quarterfinals.`);
+    const how = (r) => `Pool ${r.pool} ${finish[r.rank - 1]}`;
+    const oppIdx = (i) => seeds.findIndex((r) => r.id === opp[seeds[i].id]);
+    const notes = swaps.map((w) => `#${w.seeds[0]} and #${w.seeds[1]} trade opponents so ${name(w.teams[0])} and ${name(w.teams[1])} (both Pool ${w.pool}) don't meet again.`);
     const mtHow = (r, i) => (i === 0 ? `Pool ${r.pool} 3rd · missed wildcard` : `Pool ${r.pool} 4th`);
     return `<section class="blk">${head}
-      ${seedTable(seedRows(seeds, (i) => 7 - i, how, 'vs'), 'QF')}
-      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, fewest points allowed, most points scored. Quarterfinals: 1v8, 2v7, 3v6, 4v5.${notes.length ? ' ' + esc(notes.join(' ')) : ''}</p>
+      ${seedTable(seedRows(seeds, oppIdx, how, 'vs'), 'QF')}
+      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, fewest points allowed, most points scored. Quarterfinals: 1v8, 2v7, 3v6, 4v5, unless that's a pool rematch.${notes.length ? ' ' + esc(notes.join(' ')) : ''}</p>
       <div class="group-label" style="margin-top:1.5rem">Places 9–12</div>
       ${seedTable(seedRows(tier2, (i) => 3 - i, mtHow, 'vs MT'), 'Semi')}
       <p class="tiebreak">MT #1 is the 3rd-place team that missed the wildcard, MT #2–4 the 4th-place teams. Semifinals: MT1 v MT4, MT2 v MT3.</p>
@@ -291,7 +298,9 @@
   function bracketCard(g, projected) {
     const row = (s) => {
       const id = g[s] || resolve(g[s + 'Slot'], g.division, projected);
-      return `<div class="bm-row"><span class="seed">${esc(g[s + 'Slot'].replace(/^W:|^L:/, (m) => (m === 'W:' ? 'W ' : 'L ')))}</span>${logo(id)}<span class="nm ${id ? '' : 'tbd'}">${esc(id ? name(id) : slotText(g[s + 'Slot']))}</span>${played(g) ? `<span class="sc">${g[s === 'home' ? 'homeScore' : 'awayScore']}</span>` : ''}</div>`;
+      // A "#n" slot is a bracket position; label it with the team's real seed.
+      const tag = id && /^#\d$/.test(g[s + 'Slot']) ? `#${menSeedNo(id)}` : g[s + 'Slot'].replace(/^W:|^L:/, (m) => (m === 'W:' ? 'W ' : 'L '));
+      return `<div class="bm-row"><span class="seed">${esc(tag)}</span>${logo(id)}<span class="nm ${id ? '' : 'tbd'}">${esc(id ? name(id) : slotText(g[s + 'Slot']))}</span>${played(g) ? `<span class="sc">${g[s === 'home' ? 'homeScore' : 'awayScore']}</span>` : ''}</div>`;
     };
     return `<a class="bm" href="#match-${esc(g.id)}"><div class="bm-head"><b>${esc(g.id)}</b><span>${esc(g.round)} · ${esc(g.time)} · ${esc(g.field)}</span></div>${row('home')}${row('away')}</a>`;
   }
