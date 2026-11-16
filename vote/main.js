@@ -53,6 +53,7 @@
   }
 
   function renderSideBar() {
+    if (!$('sideBar')) return; // older cached index.html
     const other = division() + '_' + (sideOf(S.cat) === 'offense' ? 'defense' : 'offense');
     const mine = players[S.myVotes[S.cat]];
     $('sideBarCat').textContent = CATEGORY_LABEL[S.cat];
@@ -207,7 +208,7 @@
     const p = players[pid];
     if (!S.user) {
       try { sessionStorage.setItem('jff-pending-vote', JSON.stringify({ pid, cat: S.cat, week: S.week.id })); } catch {}
-      $('signinTitle').innerHTML = `Sign in to vote <span class="side-word">${sideName()}</span>`;
+      if ($('signinTitle')) $('signinTitle').innerHTML = `Sign in to vote <span class="side-word">${sideName()}</span>`;
       $('signinPlayer').style.display = 'flex'; $('signinPlayer').innerHTML = playerChip(p);
       showModal('signinModal'); api.mountSignIn($('modalSignin'), 'continue_with'); return;
     }
@@ -276,6 +277,7 @@
   // Category bar: appears under the nav once the category tabs scroll off screen.
   (function sideBar() {
     const bar = $('sideBar'), nav = document.querySelector('.nav'), tabs = $('catTabs');
+    if (!bar || !nav || !tabs) return;
     let h = 0, queued = false;
     const update = () => {
       queued = false;
