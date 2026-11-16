@@ -1,7 +1,7 @@
 {
  "name": "Open SZN IV",
- "sample": true,
- "updated": "2026-11-15T19:00:00+07:00",
+ "sample": false,
+ "updated": "2026-11-17T12:00:00+07:00",
  "venue": "DM Sport Tangerang",
  "livestream": "Field 2",
  "points": {
@@ -60,9 +60,8 @@
    "field": "Field 1",
    "home": "tropics",
    "away": "cygnus",
-   "homeScore": 30,
-   "awayScore": 36,
-   "recap": "Sample recap. After each game, JFF or a team captain writes two or three lines here: how it was won, the play everyone talked about, and who stood out. It shows under the score on this page."
+   "homeScore": 7,
+   "awayScore": 25
   },
   {
    "id": "w1-2",
@@ -75,8 +74,8 @@
    "field": "Field 2",
    "home": "orion",
    "away": "orcas",
-   "homeScore": 12,
-   "awayScore": 35
+   "homeScore": 19,
+   "awayScore": 6
   },
   {
    "id": "w1-3",
@@ -89,8 +88,8 @@
    "field": "Field 3",
    "home": "aozora",
    "away": "eagles",
-   "homeScore": 6,
-   "awayScore": 13
+   "homeScore": 19,
+   "awayScore": 32
   },
   {
    "id": "w1-4",
@@ -103,8 +102,8 @@
    "field": "Field 1",
    "home": "city-boys-club",
    "away": "basilisk",
-   "homeScore": 29,
-   "awayScore": 42
+   "homeScore": 12,
+   "awayScore": 32
   },
   {
    "id": "w1-5",
@@ -117,8 +116,8 @@
    "field": "Field 2",
    "home": "aozora-shiragumo",
    "away": "spectres",
-   "homeScore": 27,
-   "awayScore": 33
+   "homeScore": 0,
+   "awayScore": 42
   },
   {
    "id": "w1-6",
@@ -145,8 +144,8 @@
    "field": "Field 1",
    "home": "oil-city",
    "away": "unc",
-   "homeScore": 14,
-   "awayScore": 29
+   "homeScore": 20,
+   "awayScore": 6
   },
   {
    "id": "w1-8",
@@ -159,7 +158,7 @@
    "field": "Field 2",
    "home": "oozma-kappa",
    "away": "boars",
-   "homeScore": 40,
+   "homeScore": 14,
    "awayScore": 26
   },
   {
@@ -173,8 +172,8 @@
    "field": "Field 3",
    "home": "griffins",
    "away": "orion",
-   "homeScore": 6,
-   "awayScore": 30
+   "homeScore": 0,
+   "awayScore": 13
   },
   {
    "id": "w2-10",
@@ -187,8 +186,8 @@
    "field": "Field 1",
    "home": "orcas",
    "away": "gorgons",
-   "homeScore": 36,
-   "awayScore": 28
+   "homeScore": 13,
+   "awayScore": 34
   },
   {
    "id": "w2-11",
@@ -201,8 +200,8 @@
    "field": "Field 2",
    "home": "warwolves",
    "away": "griffins",
-   "homeScore": 35,
-   "awayScore": 34
+   "homeScore": 51,
+   "awayScore": 0
   },
   {
    "id": "w2-12",
@@ -215,8 +214,8 @@
    "field": "Field 3",
    "home": "oozma-kappa",
    "away": "spectres",
-   "homeScore": 20,
-   "awayScore": 25
+   "homeScore": 18,
+   "awayScore": 34
   },
   {
    "id": "w2-13",
@@ -229,8 +228,8 @@
    "field": "Field 1",
    "home": "boars",
    "away": "aozora-shiragumo",
-   "homeScore": 35,
-   "awayScore": 15
+   "homeScore": 31,
+   "awayScore": 7
   },
   {
    "id": "w2-14",
@@ -243,8 +242,8 @@
    "field": "Field 2",
    "home": "oil-city",
    "away": "eagles",
-   "homeScore": 28,
-   "awayScore": 36
+   "homeScore": 43,
+   "awayScore": 20
   },
   {
    "id": "w2-15",
@@ -257,8 +256,8 @@
    "field": "Field 3",
    "home": "tropics",
    "away": "basilisk",
-   "homeScore": 26,
-   "awayScore": 6
+   "homeScore": 6,
+   "awayScore": 41
   },
   {
    "id": "w2-16",
@@ -268,11 +267,11 @@
    "week": 2,
    "date": "2026-11-15",
    "time": "14:40",
-   "field": "Field 1",
+   "field": "Field 2",
    "home": "unc",
    "away": "aozora",
-   "homeScore": 37,
-   "awayScore": 35
+   "homeScore": 32,
+   "awayScore": 14
   },
   {
    "id": "w2-17",
@@ -282,11 +281,11 @@
    "week": 2,
    "date": "2026-11-15",
    "time": "14:40",
-   "field": "Field 2",
+   "field": "Field 1",
    "home": "gorgons",
    "away": "orion",
-   "homeScore": 14,
-   "awayScore": 20
+   "homeScore": 32,
+   "awayScore": 0
   },
   {
    "id": "w2-18",
@@ -299,8 +298,8 @@
    "field": "Field 3",
    "home": "cygnus",
    "away": "city-boys-club",
-   "homeScore": 7,
-   "awayScore": 27
+   "homeScore": 42,
+   "awayScore": 15
   },
   {
    "id": "w2-19",
@@ -313,8 +312,8 @@
    "field": "Field 4",
    "home": "orcas",
    "away": "griffins",
-   "homeScore": 14,
-   "awayScore": 35
+   "homeScore": 34,
+   "awayScore": 0
   },
   {
    "id": "w3-20",
