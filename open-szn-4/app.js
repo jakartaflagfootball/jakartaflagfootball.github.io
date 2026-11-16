@@ -80,11 +80,16 @@
     const firsts = byFinish('men', 1), seconds = byFinish('men', 2), thirds = byFinish('men', 3), fourths = byFinish('men', 4);
     let seeds = [...firsts, ...seconds, ...thirds.slice(0, 2)];
     const qf = [[0, 7], [1, 6], [2, 5], [3, 4]];
-    const clash = (s, pairs) => pairs.some(([a, b]) => s[a] && s[b] && s[a].pool === s[b].pool);
-    if (clash(seeds, [qf[0], qf[1]])) { const s = [...seeds]; [s[6], s[7]] = [s[7], s[6]]; seeds = s; }
-    if (clash(seeds, [qf[2], qf[3]])) { const s = [...seeds]; [s[4], s[5]] = [s[5], s[4]]; seeds = s; }
+    const clashing = (s, pairs) => pairs.map(([a, b]) => [s[a], s[b]]).find(([x, y]) => x && y && x.pool === y.pool);
+    const swaps = [];
+    for (const [pairs, i, j] of [[[qf[0], qf[1]], 6, 7], [[qf[2], qf[3]], 4, 5]]) {
+      const c = clashing(seeds, pairs);
+      if (!c) continue;
+      const s = [...seeds]; [s[i], s[j]] = [s[j], s[i]]; seeds = s;
+      swaps.push({ seeds: [i + 1, j + 1], teams: [c[0].id, c[1].id], pool: c[0].pool });
+    }
     const tier2 = [thirds[2], ...fourths].filter(Boolean);
-    return { seeds, tier2, thirds };
+    return { seeds, tier2, thirds, swaps };
   }
   function womenSeeds() { return table('women', 'A').slice(0, 4); }
 
@@ -206,6 +211,41 @@
       <p class="tiebreak">3rd-place teams never meet, so they're compared on points, then point difference, fewest points allowed, most points scored, then a coin toss.</p>`;
   }
 
+  // Seeds 1–8 (men) or 1–4 (women), how each got there, and who they open against.
+  function seedRows(list, opp, how, oppLabel) {
+    return list.map((r, i) => {
+      const o = list[opp(i)];
+      return `<tr data-team="${esc(r.id)}"><td class="rk">${i + 1}</td>
+        <td class="tm"><a href="#team-${esc(r.id)}">${logo(r.id)}<span>${esc(name(r.id))}<small class="seed-how">${esc(how(r, i))}</small></span></a></td>
+        <td class="pts">${r.pts}</td><td class="pd">${r.pd > 0 ? '+' : ''}${r.pd}</td>
+        <td class="vs">${o ? `${oppLabel} #${opp(i) + 1}` : ''}</td></tr>`;
+    }).join('');
+  }
+  function seedTable(body, oppHead) {
+    return `<div class="tbl-wrap"><table class="st seeds"><thead><tr><th scope="col" style="text-align:center">Seed</th><th scope="col">Team</th><th scope="col">Pts</th><th scope="col">PD</th><th scope="col">${oppHead}</th></tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+  function playoffPicture(done) {
+    const head = `<div class="blk-head"><h2 class="blk-title">Playoff picture</h2><span class="blk-sub">${done ? 'Final seeds' : 'If the season ended today'}</span></div>`;
+    if (!isMen(div)) {
+      const s = womenSeeds();
+      return `<section class="blk">${head}${seedTable(seedRows(s, (i) => 3 - i, (r) => `${ord(r.rank)} in the pool`, 'vs'), 'Semi')}
+        <p class="tiebreak">Semifinals: #1 v #4, #2 v #3.</p></section>`;
+    }
+    const { seeds, tier2, swaps } = menSeeds();
+    const finish = ['winner', 'runner-up', '3rd · wildcard'];
+    const swapped = Object.fromEntries(swaps.flatMap((w) => [[w.seeds[0], w.seeds[1]], [w.seeds[1], w.seeds[0]]]));
+    const how = (r, i) => `Pool ${r.pool} ${finish[r.rank - 1]}${swapped[i + 1] ? ` · moved from #${swapped[i + 1]}` : ''}`;
+    const notes = swaps.map((w) => `#${w.seeds[0]} and #${w.seeds[1]} swap so ${name(w.teams[0])} and ${name(w.teams[1])} (both Pool ${w.pool}) don't meet again in the quarterfinals.`);
+    const mtHow = (r, i) => (i === 0 ? `Pool ${r.pool} 3rd · missed wildcard` : `Pool ${r.pool} 4th`);
+    return `<section class="blk">${head}
+      ${seedTable(seedRows(seeds, (i) => 7 - i, how, 'vs'), 'QF')}
+      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, fewest points allowed, most points scored. Quarterfinals: 1v8, 2v7, 3v6, 4v5.${notes.length ? ' ' + esc(notes.join(' ')) : ''}</p>
+      <div class="group-label" style="margin-top:1.5rem">Places 9–12</div>
+      ${seedTable(seedRows(tier2, (i) => 3 - i, mtHow, 'vs MT'), 'Semi')}
+      <p class="tiebreak">MT #1 is the 3rd-place team that missed the wildcard, MT #2–4 the 4th-place teams. Semifinals: MT1 v MT4, MT2 v MT3.</p>
+      </section>`;
+  }
+
   // ─── Views ───────────────────────────────────────────
   function viewOverview() {
     const games = S.games.filter((x) => x.division === div);
@@ -272,7 +312,8 @@
       }).join('')}</div></section>`;
     }
     if (men) html += `<section class="blk">${wildcardTable()}</section>`;
-    const po = S.games.filter((x) => x.division === div && x.stage === 'playoff');
+    html += playoffPicture(done);
+    const po =S.games.filter((x) => x.division === div && x.stage === 'playoff');
     const groupsOrder = men ? ['Playoffs', 'Places 9–12'] : ['Championship'];
     html += `<section class="blk"><div class="blk-head"><h2 class="blk-title">${done ? 'Playoff Day' : 'If it ended today'}</h2><span class="blk-sub">Sat 5 Dec · ${esc(S.venue)}</span></div>
       ${done ? '' : '<p class="explain">Projected from the current standings, including the no-rematch rule for the quarterfinals. Seeds are set after Week 3.</p>'}
