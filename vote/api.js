@@ -76,14 +76,24 @@
       },
       // Upload an already-resized JPEG for a nominee, then save it on the nomination.
       async uploadPhoto(weekId, playerId, blob) {
+        const NOPE = "This photo can't be changed now. Voting has closed, or you're not this team's captain.";
+        const prev = (await sb.from('potw_nominations').select('photo_path').eq('week_id', weekId).eq('player_id', playerId).maybeSingle()).data?.photo_path;
         const path = `${weekId}/${playerId}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.jpg`;
         const up = await sb.storage.from('nominee-photos').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
         if (up.error) {
-          if (/row-level security|403|Unauthorized/i.test(up.error.message || '')) throw new Error("This photo can't be changed now. Voting has opened and the nominee already has a photo.");
+          if (/row-level security|403|Unauthorized/i.test(up.error.message || '')) throw new Error(NOPE);
           throw up.error;
         }
         const rows = ok(await sb.from('potw_nominations').update({ photo_path: path }).eq('week_id', weekId).eq('player_id', playerId).select('player_id'));
-        if (!rows.length) throw new Error("This photo can't be changed now. Voting has opened and the nominee already has a photo.");
+        if (!rows.length) {
+          await sb.storage.from('nominee-photos').remove([path]).catch(() => {});
+          throw new Error(NOPE);
+        }
+        // The new photo is saved; remove the old file. If this fails, the old file just stays unused.
+        if (prev && prev !== path) {
+          const rm = await sb.storage.from('nominee-photos').remove([prev]).catch((e) => ({ error: e }));
+          if (rm.error) console.warn('Old photo not removed', rm.error);
+        }
         return path;
       },
       photoUrl(path) { return path ? `${cfg.SUPABASE_URL}/storage/v1/object/public/nominee-photos/${path}` : null; },
