@@ -246,6 +246,25 @@ table.st { width: 100%; border-collapse: collapse; font-variant-numeric: tabular
 .stake li { margin-left: 1rem; }
 .empty-note { color: var(--muted); font-size: .85rem; padding: 1rem 0; }
 
+
+/* Open SZN IV format additions */
+.st tr.cut-wild td { border-bottom: 1px dashed var(--gold); }
+.legend .line.gold { border-top-color: var(--gold); }
+.pool-tag { font-size: .62rem; font-weight: 700; color: var(--gold); letter-spacing: .06em; margin-left: .15rem; }
+.g-code { font-size: .62rem; font-weight: 700; letter-spacing: .1em; color: var(--gold); }
+.live { display: block; color: var(--accent-bright); font-size: .62rem; font-weight: 700; letter-spacing: .06em; }
+.match-meta .live { display: inline; font-size: inherit; }
+.g-row.tbd .nm, .bm-row .nm.tbd { color: var(--muted); font-style: italic; font-weight: 400; }
+.logo-fb.tbd { background: none; border: 1px dashed var(--border); color: var(--muted); }
+.pill.wild { background: var(--hunt-bg); color: var(--hunt); border: 1px solid rgba(201,168,76,.35); }
+.round-label { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 1rem 0 .45rem; }
+a.bm { display: block; color: var(--text); text-decoration: none; }
+a.bm:hover { border-color: var(--accent); }
+.bm-head { display: flex; justify-content: space-between; gap: .5rem; padding: .45rem .8rem; font-size: .68rem; color: var(--muted); border-bottom: 1px solid var(--border); background: rgba(255,255,255,.02); }
+.bm-head b { color: var(--gold); letter-spacing: .08em; }
+.bm-row .sc { font-family: var(--font-display); font-size: 1.2rem; }
+.bm-row .seed { width: auto; min-width: 2.6rem; }
+
 @media (min-width: 640px) {
   .col-form { display: table-cell; }
   .tgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
