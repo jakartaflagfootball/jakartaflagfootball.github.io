@@ -16,6 +16,8 @@
 
   // ─── RENDER ───────────────────────────────────────────
   const division = () => S.cat.split('_')[0];
+  const sideOf = (c) => c.split('_')[1];
+  const sideName = (c = S.cat) => (sideOf(c) === 'offense' ? 'Offense' : 'Defense');
   const open = () => JFF.isOpen(S.week);
   const playerLine = (p) => [p.position || 'Position TBA', teams[p.team].name].join(' · ');
 
@@ -41,10 +43,23 @@
       const [div, side] = CATEGORY_LABEL[c].split(' ');
       const mine = players[S.myVotes[c]];
       const state = mine ? `✓ ${esc(mine.nickname || mine.full_name)}` : S.user && open() ? 'Not voted yet' : '';
-      return `<button class="cat-tab ${c === S.cat ? 'active' : ''}" role="tab" aria-selected="${c === S.cat}" data-cat="${c}">
+      return `<button class="cat-tab ${c === S.cat ? 'active' : ''}" role="tab" aria-selected="${c === S.cat}" data-cat="${c}" data-side="${sideOf(c)}">
         <span class="cat-tab-div">${esc(div)}</span><span class="cat-tab-name">${esc(side)}</span>
         <span class="cat-tab-state ${mine ? 'done' : ''}">${state || '&nbsp;'}</span></button>`;
     }).join('');
+    // Offense and Defense each get their own color across the page.
+    document.body.dataset.side = sideOf(S.cat);
+    renderSideBar();
+  }
+
+  function renderSideBar() {
+    const other = division() + '_' + (sideOf(S.cat) === 'offense' ? 'defense' : 'offense');
+    const mine = players[S.myVotes[S.cat]];
+    $('sideBarCat').textContent = CATEGORY_LABEL[S.cat];
+    $('sideBarState').textContent = mine ? `✓ ${mine.nickname || mine.full_name}` : '';
+    const sw = $('sideBarSwitch');
+    sw.dataset.cat = other; sw.dataset.side = sideOf(other);
+    sw.innerHTML = `Switch to <b>${sideName(other)}</b>`;
   }
 
   function renderWeek() {
@@ -117,10 +132,11 @@
     for (const ps of byTeam.values()) ps.sort((a, b) => num(a) - num(b) || String(a.number).length - String(b.number).length);
     const card = (p) => {
       const isMine = mine === p.id;
-      const btn = isMine ? '<button class="pc-vote is-mine" disabled>✓ Your vote</button>'
+      const side = sideName();
+      const btn = isMine ? `<button class="pc-vote is-mine" disabled>✓ ${side}</button>`
         : mine ? '<button class="pc-vote" disabled>Voted</button>'
         : !open() ? `<button class="pc-vote" disabled>${notStarted() ? 'Opens soon' : 'Closed'}</button>`
-        : `<button class="pc-vote" data-vote="${p.id}">Vote</button>`;
+        : `<button class="pc-vote" data-vote="${p.id}" aria-label="Vote ${esc(p.nickname || p.full_name)} for ${esc(CATEGORY_LABEL[S.cat])}">Vote ${side}</button>`;
       const photo = api.photoUrl(S.photos[p.id]);
       return `<article class="player-card ${photo ? 'has-photo' : ''} ${isMine ? 'voted' : mine ? 'dim' : ''} ${S.invite?.id === p.id ? 'highlight' : ''}" id="pc-${p.id}">
         ${photo ? `<div class="pc-photo"><img src="${esc(photo)}" alt="${esc(p.nickname || p.full_name)}" loading="lazy"></div>` : ''}
@@ -191,11 +207,14 @@
     const p = players[pid];
     if (!S.user) {
       try { sessionStorage.setItem('jff-pending-vote', JSON.stringify({ pid, cat: S.cat, week: S.week.id })); } catch {}
+      $('signinTitle').innerHTML = `Sign in to vote <span class="side-word">${sideName()}</span>`;
       $('signinPlayer').style.display = 'flex'; $('signinPlayer').innerHTML = playerChip(p);
       showModal('signinModal'); api.mountSignIn($('modalSignin'), 'continue_with'); return;
     }
     S.pending = pid;
-    $('confirmCat').innerHTML = `${esc(CATEGORY_LABEL[S.cat])} · ${esc(S.week.label)}`;
+    $('confirmCat').textContent = `${CATEGORY_LABEL[S.cat]} · ${S.week.label}`;
+    $('confirmTitle').innerHTML = `Your <span class="side-word">${sideName()}</span> vote`;
+    $('confirmBtn').textContent = `Cast ${sideName()} vote`;
     $('confirmPlayer').innerHTML = playerChip(p);
     showModal('confirmModal');
   }
@@ -211,7 +230,7 @@
     } catch (e) {
       JFF.toast(e.message || 'Something went wrong. Try again.', 'error');
       if (/already/i.test(e.message)) { S.myVotes = await api.myVotes(S.week.id); renderAll(); hideModals(); }
-    } finally { btn.disabled = false; btn.textContent = 'Cast vote'; }
+    } finally { btn.disabled = false; btn.textContent = `Cast ${sideName(cat)} vote`; }
   }
 
   const baseUrl = () => (api.demo ? location.origin + location.pathname : cfg.PUBLIC_URL);
@@ -222,7 +241,7 @@
   function openShare(pid, cat, voted) {
     const p = players[pid];
     $('shareCheck').style.display = voted ? 'grid' : 'none';
-    $('shareTitle').textContent = voted ? 'Vote counted!' : `Rally for ${p.nickname || p.full_name}`;
+    $('shareTitle').textContent = voted ? `${sideName(cat)} vote counted!` : `Rally for ${p.nickname || p.full_name}`;
     $('shareSub').textContent = voted
       ? (votedCount() < 4 ? `Now get your friends to vote too. You still have ${4 - votedCount()} ${4 - votedCount() === 1 ? 'category' : 'categories'} left.` : "You've voted in all 4 categories. Now get your friends to vote.")
       : `Send ${p.nickname || 'their'} vote link to your group chats.`;
@@ -253,6 +272,22 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModals(); });
   $('confirmBtn').addEventListener('click', castVote);
+
+  // Category bar: appears under the nav once the category tabs scroll off screen.
+  (function sideBar() {
+    const bar = $('sideBar'), nav = document.querySelector('.nav'), tabs = $('catTabs');
+    let h = 0, queued = false;
+    const update = () => {
+      queued = false;
+      const show = tabs.offsetHeight > 0 && tabs.getBoundingClientRect().bottom < h;
+      if (show !== bar.classList.contains('show')) { bar.classList.toggle('show', show); bar.setAttribute('aria-hidden', String(!show)); }
+    };
+    const measure = () => { h = nav.offsetHeight; document.documentElement.style.setProperty('--nav-h', h + 'px'); update(); };
+    window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', measure);
+    window.addEventListener('load', measure);
+    measure();
+  })();
   $('search').addEventListener('input', (e) => { S.search = e.target.value; renderPlayers(); });
   $('teamFilter').addEventListener('change', (e) => { S.team = e.target.value; renderPlayers(); });
   $('weekSelect').addEventListener('change', (e) => { S.week = S.weeks.find((w) => String(w.id) === e.target.value); loadWeek(); });
