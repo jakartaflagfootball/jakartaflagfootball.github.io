@@ -416,7 +416,7 @@
     }
     try { localStorage.setItem('szn4-div', div); } catch {}
     $('view').innerHTML = html;
-    document.querySelectorAll('#tabs a').forEach((a) => { a.href = '#' + hashFor(a.dataset.view); if (a.dataset.view === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    document.querySelectorAll('#tabs a[data-view]').forEach((a) => { a.href = '#' + hashFor(a.dataset.view); if (a.dataset.view === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     $('divMen').setAttribute('aria-pressed', String(div === 'men'));
     $('divWomen').setAttribute('aria-pressed', String(div === 'women'));
     $('teamFilter')?.addEventListener('change', (e) => { teamFilter = e.target.value; route(); });

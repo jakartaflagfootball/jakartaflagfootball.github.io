@@ -76,6 +76,8 @@ body { background: var(--bg); }
   color: var(--muted); padding: .55rem 2px .7rem; border-bottom: 2px solid transparent; text-decoration: none;
 }
 .tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.tabs a.tab-vote { color: var(--gold); }
+.tabs a.tab-vote:hover { color: var(--text); }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 main.wrap { padding-top: 1.5rem; padding-bottom: 5rem; min-height: 60vh; }
@@ -303,11 +305,10 @@ a.bm:hover { border-color: var(--accent); }
     <a href="../teams.html">Teams</a>
     <a href="../players.html">Players</a>
     <a href="../tournaments.html">Tournaments</a>
-    <a href="./" class="active">Open SZN IV</a>
     <a href="../gallery.html">Gallery</a>
     <a href="../about.html">About</a>
     <a href="../corporate.html">Corporate</a>
-    <a href="../vote/" class="nav-vote">VOTE for OPEN&nbsp;SZN&nbsp;IV</a>
+    <a href="./" class="nav-vote">OPEN&nbsp;SZN&nbsp;IV</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="nav-playbook">Playbook ↗</a>
   </div>
   <button class="nav-burger" id="navBurger" aria-label="Open menu">
@@ -327,11 +328,10 @@ a.bm:hover { border-color: var(--accent); }
     <a href="../teams.html">Teams</a>
     <a href="../players.html">Players</a>
     <a href="../tournaments.html">Tournaments</a>
-    <a href="./">Open SZN IV</a>
     <a href="../gallery.html">Gallery</a>
     <a href="../about.html">About</a>
     <a href="../corporate.html">Corporate Sessions</a>
-    <a href="../vote/" class="drawer-vote">VOTE for OPEN&nbsp;SZN&nbsp;IV</a>
+    <a href="./" class="drawer-vote">OPEN&nbsp;SZN&nbsp;IV</a>
     <a href="https://playbook.jakartaflagfootball.com/" target="_blank" class="drawer-playbook">Playbook ↗</a>
   </nav>
 </div>
@@ -358,6 +358,7 @@ a.bm:hover { border-color: var(--accent); }
       <a data-view="games" href="#games">Games</a>
       <a data-view="playoffs" href="#playoffs">Playoffs</a>
       <a data-view="teams" href="#teams">Teams</a>
+      <a class="tab-vote" href="../vote/">Vote</a>
     </nav>
   </div>
 </div>

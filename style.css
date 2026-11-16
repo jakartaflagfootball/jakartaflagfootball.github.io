@@ -1325,8 +1325,8 @@ a { color: inherit; text-decoration: none; }
 .nav-drawer-links .drawer-vote { color: var(--accent-bright); }
 .footer-small a { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 1150px) { .nav-links { gap: 1.25rem; } }
-/* Too many nav items to fit on tablets: use the burger menu below 1360px */
-@media (max-width: 1360px) { .nav-links { display: none; } .nav-burger { display: flex; } }
+/* Too many nav items to fit on tablets: use the burger menu below 1240px */
+@media (max-width: 1240px) { .nav-links { display: none; } .nav-burger { display: flex; } }
 .nav-links a, .nav-logo-text { white-space: nowrap; }
 @media (max-width: 1400px) { .nav-links { gap: 1.25rem; } }
 /* Drawer: scroll if it can't fit, and tighten on short phones (e.g. iPhone SE) */

@@ -250,6 +250,7 @@ button:disabled { cursor: default; }
   .container { padding: 0 16px; }
   .nav { padding: .75rem 16px; }
   .nav-links a.hide-sm { display: none; }
+  .nav-links a { white-space: nowrap; }
   .page-header { padding-top: 6rem; }
   .players-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: .5rem; }
   .player-card { padding: .8rem .75rem .75rem; }
@@ -373,3 +374,8 @@ body[data-side="defense"] { --side: var(--def); --side-bright: var(--def-bright)
   .side-bar-label span { display: block; margin: 0; }
 }
 .lb-row .lb-bar { background: var(--side-soft); }
+
+/* Phones: the "← Open SZN IV" link needs the room; "How it works" is just further down the page. */
+@media (max-width: 480px) {
+  .nav-links a.hide-xs { display: none; }
+}
