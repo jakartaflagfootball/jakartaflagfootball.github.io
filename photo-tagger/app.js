@@ -8,6 +8,8 @@
 (function () {
   const BUCKET = 'photo-tagger';
   const PAGE = 120, PEOPLE_SHOWN = 40, REFRESH_MS = 30000;
+  // Preview sizes fetched from Drive. Full-resolution originals load only via "Download original".
+  const GRID_PX = 480, VIEW_PX = 1280;
   const KEYS = [['overall', 'Overall'], ['clarity', 'Clarity'], ['action', 'Action'], ['framing', 'Framing'], ['moment', 'Moment'], ['look', 'Look']];
   const LABEL = Object.fromEntries(KEYS);
   const $ = (s) => document.querySelector(s);
@@ -350,7 +352,7 @@
     return `<div class="card ${on ? 'starred' : ''}" data-id="${esc(p.id)}">
       <button class="open" data-i="${i}" aria-label="${esc(p.name)}, ${LABEL[S.sort]} ${s[S.sort]}">
         <div class="thumb">
-          <img src="${driveImg(p.id, 640)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+          <img src="${driveImg(p.id, GRID_PX)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
           <span class="pill rank">#${i + 1}</span>
           ${p.burst_size > 1 && !S.person ? `<span class="pill burst">${p.burst_size} frames</span>` : ''}
           <span class="badge" style="color:${color(s[S.sort])}">${s[S.sort]}<small>${LABEL[S.sort]}</small></span>
@@ -394,7 +396,7 @@
       return `<button class="box ${cls}" data-face="${j}" title="Fix who this is"
         style="left:${(x1 / p.w) * 100}%;top:${(y1 / p.h) * 100}%;width:${((x2 - x1) / p.w) * 100}%;height:${((y2 - y1) / p.h) * 100}%"><span>${esc(label)}</span></button>`;
     }).join('');
-    $('#stage').innerHTML = `<img src="${driveImg(p.id, 1600)}" alt="${esc(p.name)}" referrerpolicy="no-referrer">${boxes}`;
+    $('#stage').innerHTML = `<img src="${driveImg(p.id, VIEW_PX)}" alt="${esc(p.name)}" referrerpolicy="no-referrer">${boxes}`;
     renderSide(p);
     $('#lb').classList.add('open'); document.body.style.overflow = 'hidden';
     $('#lbClose').focus();
