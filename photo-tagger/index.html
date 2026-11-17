@@ -51,7 +51,7 @@ section{margin-top:var(--s5)}
 h2{font-size:24px;font-weight:700}
 .hint{color:var(--muted);font-size:13px}
 
-.people{display:flex;gap:var(--s3);overflow-x:auto;padding:var(--s2) 2px var(--s4)}
+.people{display:flex;align-items:flex-start;gap:var(--s3);overflow-x:auto;padding:var(--s2) 2px var(--s4)}
 .person{flex:0 0 112px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
   padding:var(--s3) var(--s2) var(--s2);text-align:center;box-shadow:var(--sh-raised);position:relative;transition:transform .35s var(--spring)}
 .person:hover{transform:translateY(-3px)}
@@ -171,6 +171,24 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fix input:focus{outline:none;border-color:var(--accent)}
 .fix .actions{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s3)}
 .fix p{margin:var(--s2) 0 0;font-size:12px;color:var(--muted)}
+.picks{max-height:min(240px,40vh);overflow-y:auto;margin-top:var(--s3);overscroll-behavior:contain}
+.picks h4{margin:var(--s2) 0 var(--s1);font:600 11px "IBM Plex Sans";text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.picks h4:first-child{margin-top:0}
+.picks .row-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pl{all:unset;cursor:pointer;font:500 13px "IBM Plex Sans";padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--raised);color:var(--ink);
+  transition:transform .25s var(--spring)}
+.pl b{font:600 12px "IBM Plex Mono";color:var(--muted);margin-right:4px}
+.pl:hover{border-color:var(--muted)}
+.pl:active{transform:scale(.95)}
+.pl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pl.sug{border-color:var(--gold);background:rgba(242,177,75,.1)}
+.pl.sug b{color:var(--gold)}
+.person .who{display:block;font:500 10px "IBM Plex Mono";color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person .sugg{all:unset;cursor:pointer;display:block;margin-top:var(--s1);font:500 11px/1.3 "IBM Plex Sans";color:var(--gold);border:1px dashed rgba(242,177,75,.5);
+  border-radius:6px;padding:3px 4px;transition:transform .25s var(--spring)}
+.person .sugg:hover{background:rgba(242,177,75,.1)}
+.person .sugg:active{transform:scale(.95)}
+.person .sugg:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 .toast{position:fixed;left:50%;bottom:var(--s5);transform:translateX(-50%) translateY(20px);opacity:0;z-index:70;background:var(--float);border:1px solid var(--line);
   padding:var(--s2) var(--s4);border-radius:999px;font-size:13px;box-shadow:var(--sh-float);transition:transform .35s var(--spring),opacity .2s;pointer-events:none}
@@ -194,7 +212,7 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <section>
       <div class="sec-head">
         <h2>People</h2>
-        <span class="hint">Click a face to filter · type a name and press Enter · same name on two groups merges them</span>
+        <span class="hint">Tap a face to filter · type a name or tap a <span style="color:var(--gold)">suggested player</span> · same name on two groups merges them</span>
       </div>
       <div class="people" id="people"></div>
     </section>
@@ -225,6 +243,7 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <h3 id="fixTitle">Who is this?</h3>
   <input id="fixInput" list="peopleList" placeholder="Type a name or Person number" autocomplete="off">
   <datalist id="peopleList"></datalist>
+  <div class="picks" id="fixPicks"></div>
   <div class="actions">
     <button class="btn primary" id="fixSave">Save</button>
     <button class="btn" id="fixNone">Not a known person</button>
@@ -238,6 +257,7 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script src="../vote/config.js"></script>
 <script src="../vote/jff-auth.js"></script>
+<script src="../vote/roster.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

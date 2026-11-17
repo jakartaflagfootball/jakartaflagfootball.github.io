@@ -117,6 +117,19 @@
     list: [], shown: 0, idx: -1, fixing: null, user: null,
   };
 
+  // ─── ROSTER (vote/roster.js) ────────────────────────────
+  const TEAMS = Object.fromEntries((window.JFF_TEAMS || []).map((t) => [t.id, t]));
+  const PLAYERS = Object.fromEntries((window.JFF_PLAYERS || []).map((p) => [p.id, p]));
+  const nick = (p) => (p.nickname || p.full_name.split(' ')[0]).trim();
+  const nickCount = {};
+  Object.values(PLAYERS).forEach((p) => { const k = nick(p).toLowerCase(); nickCount[k] = (nickCount[k] || 0) + 1; });
+  // name used for a face group: the nickname, plus the number when two players share a nickname
+  const rosterName = (p) => (nickCount[nick(p).toLowerCase()] > 1 ? `${nick(p)} #${p.number}` : nick(p));
+  const BY_NAME = Object.fromEntries(Object.values(PLAYERS).map((p) => [rosterName(p).toLowerCase(), p]));
+  const teamName = (id) => TEAMS[id]?.name || id;
+  const byNumber = (a, b) => (a.number === '' ? 999 : +a.number) - (b.number === '' ? 999 : +b.number);
+  const teamPlayers = (tid) => Object.values(PLAYERS).filter((p) => p.team === tid).sort(byNumber);
+
   const personLabel = (id) => { const p = S.byId[id]; return p && p.name ? p.name : p ? `Person ${S.num[id]}` : 'Unknown'; };
   const personKey = (id) => { const p = S.byId[id]; return p && p.name ? 'n:' + p.name.toLowerCase() : 'g:' + id; };
   const topOf = (f) => f.split('/')[0];
@@ -235,7 +248,8 @@
       <div class="person ${S.person === personKey(p.id) ? 'on' : ''}" data-id="${p.id}">
         <span class="count">${counts[p.id]}</span>
         <button class="face" aria-label="Show photos of ${esc(personLabel(p.id))}"><img src="${esc(urls[p.face] || '')}" alt="" loading="lazy"></button>
-        <input value="${esc(p.name)}" placeholder="Person ${S.num[p.id]}" aria-label="Name for person ${S.num[p.id]}" maxlength="60">
+        <input value="${esc(p.name)}" placeholder="Person ${S.num[p.id]}" aria-label="Name for person ${S.num[p.id]}" maxlength="60" list="rosterList">
+        ${whoLine(p)}
       </div>`).join('') || '<div class="hint">No people in this selection.</div>';
     if (scoped.length > PEOPLE_SHOWN)
       el.insertAdjacentHTML('beforeend', `<button class="more-people" id="morePeople">${S.allPeople ? 'Show fewer' : `Show all ${scoped.length}`}</button>`);
@@ -246,16 +260,39 @@
       const inp = card.querySelector('input');
       inp.onkeydown = (e) => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = S.byId[id].name || ''; inp.blur(); } };
       inp.onblur = async () => {
-        const name = inp.value.trim(), p = S.byId[id];
-        if (name === (p.name || '')) return;
-        const wasActive = S.person === personKey(id);
-        try { await api.setName(id, name); } catch (e) { toast(e.message || 'Could not save name', 'error'); inp.value = p.name || ''; return; }
-        p.name = name; if (wasActive) S.person = personKey(id);
-        card.classList.add('saved'); setTimeout(() => card.classList.remove('saved'), 900);
-        renderHeader(); renderGrid();
+        const name = inp.value.trim();
+        if (name === (S.byId[id].name || '')) return;
+        if (!(await nameGroup(id, name))) inp.value = S.byId[id].name || '';
       };
+      card.querySelectorAll('.sugg').forEach((b) => b.addEventListener('click', () => nameGroup(id, rosterName(PLAYERS[b.dataset.player]))));
     });
     fillPeopleList();
+  }
+
+  // Under a person card: the roster player it's named after, or the best suggestion to confirm.
+  function whoLine(p) {
+    if (p.name) {
+      const pl = BY_NAME[p.name.toLowerCase()];
+      return pl ? `<span class="who">#${esc(pl.number)} · ${esc(teamName(pl.team))}</span>` : '';
+    }
+    // same number on both teams of a game ties: show both and let the person pick
+    const open = (p.sugg || []).filter((x) => PLAYERS[x.player] && !takenName(rosterName(PLAYERS[x.player])));
+    return open.filter((x) => x.votes === open[0].votes).slice(0, 2).map((s) => {
+      const pl = PLAYERS[s.player];
+      return `<button class="sugg" data-player="${esc(pl.id)}" title="Jersey #${esc(pl.number)} read in ${s.votes} photos. Tap to confirm">
+        ${esc(rosterName(pl))} #${esc(pl.number)}<br>${esc(teamName(pl.team))}? ✓</button>`;
+    }).join('');
+  }
+  const takenName = (name) => S.data.people.some((q) => q.name && q.name.toLowerCase() === name.toLowerCase());
+
+  async function nameGroup(id, name) {
+    const p = S.byId[id], wasActive = S.person === personKey(id);
+    try { await api.setName(id, name); } catch (e) { toast(e.message || 'Could not save name', 'error'); return false; }
+    p.name = name; if (wasActive) S.person = personKey(id);
+    toast(name ? `Named ${name}` : 'Name cleared');
+    renderHeader(); renderPeople(); renderGrid();
+    if (S.idx >= 0) openLb(S.idx);
+    return true;
   }
 
   function fillPeopleList() {
@@ -264,7 +301,14 @@
       const label = personLabel(p.id);
       if (!seen.has(label.toLowerCase())) { seen.add(label.toLowerCase()); opts.push(label); }
     });
+    Object.values(PLAYERS).forEach((p) => {
+      const n = rosterName(p);
+      if (!seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); opts.push(n); }
+    });
     $('#peopleList').innerHTML = opts.map((o) => `<option value="${esc(o)}">`).join('');
+    if (!$('#rosterList')) document.body.insertAdjacentHTML('beforeend', '<datalist id="rosterList"></datalist>');
+    $('#rosterList').innerHTML = Object.values(PLAYERS).sort((a, b) => a.team.localeCompare(b.team) || byNumber(a, b))
+      .map((p) => `<option value="${esc(rosterName(p))}">#${esc(p.number)} ${esc(teamName(p.team))}</option>`).join('');
   }
 
   function filtered() {
@@ -385,12 +429,38 @@
     S.fixing = { p, j };
     $('#fixTitle').textContent = f.person == null ? 'Who is this?' : `Is this ${personLabel(f.person)}?`;
     const inp = $('#fixInput'); inp.value = f.person == null ? '' : personLabel(f.person);
+    renderPicks(p, f);
     const r = btn.getBoundingClientRect(), box = $('#fix');
     box.classList.add('open');
     const w = box.offsetWidth, h = box.offsetHeight;
     box.style.left = Math.max(16, Math.min(innerWidth - w - 16, r.left)) + 'px';
     box.style.top = (r.bottom + h + 24 < innerHeight ? r.bottom + 24 : Math.max(16, r.top - h - 8)) + 'px';
-    inp.focus(); inp.select();
+    if (matchMedia('(hover: hover)').matches) { inp.focus(); inp.select(); } // no keyboard pop-up on phones
+    else $('#fixPicks').scrollTop = 0;
+  }
+
+  // Tappable roster players: suggestions for this face's group, then both teams of this game.
+  function renderPicks(p, f) {
+    const g = f.person != null ? S.byId[f.person] : null;
+    const sugg = (g?.sugg || []).map((x) => PLAYERS[x.player]).filter(Boolean);
+    const teams = (S.data.games?.[p.folder] || []).length ? S.data.games[p.folder] : g?.teams || [];
+    const chip = (pl, sug) => `<button class="pl ${sug ? 'sug' : ''}" data-player="${esc(pl.id)}"><b>#${esc(pl.number)}</b>${esc(nick(pl))}</button>`;
+    let html = sugg.length ? `<h4>Suggested from jersey number</h4><div class="row-chips">${sugg.map((pl) => chip(pl, true)).join('')}</div>` : '';
+    teams.forEach((t) => { const ps = teamPlayers(t); if (ps.length) html += `<h4>${esc(teamName(t))}</h4><div class="row-chips">${ps.map((pl) => chip(pl, false)).join('')}</div>`; });
+    $('#fixPicks').innerHTML = html;
+    $('#fixPicks').hidden = !html;
+  }
+
+  // A roster player was picked for the face being fixed.
+  function pickPlayer(pl) {
+    const name = rosterName(pl), { p, j } = S.fixing || {};
+    if (!p) return;
+    const existing = resolvePerson(name);
+    if (existing !== undefined) return saveFix(existing);
+    const gid = p.faces[j].person;
+    if (gid != null && !S.byId[gid]?.name) { closeFix(); return nameGroup(gid, name); } // name the whole group
+    toast(gid == null ? `${name} has no face group yet. Name them on a clearer photo first.`
+      : `${name} has no face group yet, and this face is in ${personLabel(gid)}'s group. Pick "Not a known person" or name ${name} on another photo first.`, 'error');
   }
   function closeFix() { $('#fix').classList.remove('open'); S.fixing = null; }
 
@@ -419,7 +489,10 @@
     const open = e.target.closest('.open'); if (open) openLb(+open.dataset.i);
   });
   $('#stage').addEventListener('click', (e) => { const b = e.target.closest('.box'); if (b) openFix(b); });
+  $('#fixPicks').addEventListener('click', (e) => { const b = e.target.closest('.pl'); if (b) pickPlayer(PLAYERS[b.dataset.player]); });
   $('#fixSave').onclick = () => {
+    const pl = BY_NAME[$('#fixInput').value.trim().toLowerCase()];
+    if (pl && resolvePerson($('#fixInput').value) === undefined) return pickPlayer(pl);
     const gid = resolvePerson($('#fixInput').value);
     if (gid === undefined) return toast('No one with that name yet. Name their face group in People first.', 'error');
     saveFix(gid);
