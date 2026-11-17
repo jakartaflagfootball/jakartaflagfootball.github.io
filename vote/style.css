@@ -375,6 +375,29 @@ body[data-side="defense"] { --side: var(--def); --side-bright: var(--def-bright)
 }
 .lb-row .lb-bar { background: var(--side-soft); }
 
+/* ─── WINNERS PAGE ─── */
+.win-bar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: 1.25rem; }
+.win-bar .btn-primary { margin-left: auto; }
+.win-cat { margin-top: 2rem; }
+.win-cat[data-side="offense"] .section-header { border-bottom-color: var(--off); }
+.win-cat[data-side="offense"] h2 { color: var(--off-bright); }
+.win-cat[data-side="defense"] .section-header { border-bottom-color: var(--def); }
+.win-cat[data-side="defense"] h2 { color: var(--def-bright); }
+.win-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .75rem; }
+.win-card { display: flex; gap: .9rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .75rem; }
+.win-photo { position: relative; flex: 0 0 110px; aspect-ratio: 4 / 5; border-radius: 6px; overflow: hidden; background: var(--surface2); display: grid; place-items: center; color: #555; font-size: .75rem; }
+.win-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+.win-rank { position: absolute; top: .35rem; left: .35rem; background: rgba(14,14,14,.85); color: var(--gold); font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; letter-spacing: .05em; padding: .05rem .45rem; border-radius: 3px; }
+.win-info { min-width: 0; display: flex; flex-direction: column; gap: .15rem; }
+.win-num { color: var(--muted); font-weight: 400; }
+.win-votes { color: var(--gold); font-size: .8rem; font-weight: 600; margin-top: .2rem; }
+.win-btns { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: auto; padding-top: .5rem; }
+@media (max-width: 600px) {
+  .win-bar .btn-primary { margin-left: 0; width: 100%; }
+  .win-bar select { flex: 1; }
+  .win-photo { flex-basis: 96px; }
+}
+
 /* Phones: the "← Open SZN IV" link needs the room; "How it works" is just further down the page. */
 @media (max-width: 480px) {
   .nav-links a.hide-xs { display: none; }

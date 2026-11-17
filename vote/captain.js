@@ -75,32 +75,14 @@
       <p class="photo-tip">Use a clear, upright photo of the player, ideally in their jersey. It's cropped to a 4:5 portrait, like an Instagram post.</p>`;
   }
 
-  // Shrink to Instagram size as a JPEG before uploading.
-  async function shrink(file) {
-    let src;
-    try { src = await createImageBitmap(file); }
-    catch {
-      src = await new Promise((res, rej) => {
-        const i = new Image(); i.onload = () => res(i);
-        i.onerror = () => rej(new Error("Couldn't read this photo. Try a JPG or PNG (on iPhone, a screenshot of the photo works)."));
-        i.src = URL.createObjectURL(file);
-      });
-    }
-    // Keep enough pixels to fill a 1080×1350 portrait crop, but cap the long side at 2400.
-    const r = Math.min(1, Math.max(1080 / src.width, 1350 / src.height), 2400 / Math.max(src.width, src.height));
-    const c = document.createElement('canvas');
-    c.width = Math.round(src.width * r); c.height = Math.round(src.height * r);
-    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
-    return new Promise((res) => c.toBlob(res, 'image/jpeg', 0.86));
-  }
-
   async function uploadPhoto(pid, file) {
     if (!file) return;
     if (!/^image\//.test(file.type) && !/\.(heic|heif|jpe?g|png|webp)$/i.test(file.name)) return JFF.toast('Please pick a photo.', 'error');
     S.uploading = pid; renderPhotos();
     try {
-      const blob = await shrink(file);
-      S.photos[pid] = await api.uploadPhoto(S.week.id, pid, blob);
+      // Small card copy, medium Story copy, and a full-quality copy kept private for designers.
+      const versions = await JFF.photoVersions(file);
+      S.photos[pid] = await api.uploadPhoto(S.week.id, pid, versions);
       JFF.toast('Photo saved');
     } catch (e) {
       console.error(e); JFF.toast(e.message || 'Upload failed. Try again.', 'error');

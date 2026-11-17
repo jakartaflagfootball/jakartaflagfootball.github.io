@@ -253,7 +253,7 @@
       try { await navigator.clipboard.writeText(url); JFF.toast('Link copied'); }
       catch { prompt('Copy this link:', url); }
     };
-    $('shareStory').onclick = () => JFFStory.make(p, teams[p.team], CATEGORY_LABEL[cat], voted, baseUrl(), api.photoUrl(S.photos[p.id])).catch((e) => { console.error(e); JFF.toast('Could not make the image', 'error'); });
+    $('shareStory').onclick = () => JFFStory.make(p, teams[p.team], CATEGORY_LABEL[cat], voted, baseUrl(), api.photoMdUrl ? api.photoMdUrl(S.photos[p.id]) : api.photoUrl(S.photos[p.id])).catch((e) => { console.error(e); JFF.toast('Could not make the image', 'error'); });
     const nat = $('shareNative');
     nat.style.display = navigator.share ? 'flex' : 'none';
     nat.onclick = () => navigator.share({ title: "JFF People's Choice Player of the Week", text, url }).catch(() => {});

@@ -9,6 +9,17 @@
     // Sign-in is stored in a cookie shared across *.jakartaflagfootball.com (see jff-auth.js).
     const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: JFFAuth.options() });
     const ok = ({ data, error }) => { if (error) throw error; return data; };
+    const PUB = 'nominee-photos', FULL = 'nominee-photos-full';
+    const PUB_URL = `${cfg.SUPABASE_URL}/storage/v1/object/public/${PUB}`;
+    const isNew = (path) => /-sm\.jpg$/.test(path);
+    // Remove every file of a photo (all three sizes, or the single older file). Failures are ignored.
+    async function removePhoto(path) {
+      const tasks = isNew(path)
+        ? [sb.storage.from(PUB).remove([path, path.replace(/-sm\.jpg$/, '-md.jpg')]), sb.storage.from(FULL).remove([path.replace(/-sm\.jpg$/, '-full.jpg')])]
+        : [sb.storage.from(PUB).remove([path])];
+      const res = await Promise.all(tasks.map((t) => t.catch((e) => ({ error: e }))));
+      res.filter((r) => r.error).forEach((r) => console.warn('Old photo not removed', r.error));
+    }
     const toUser = (u) => u && {
       id: u.id,
       email: u.email,
@@ -74,29 +85,62 @@
         if (error) throw error;
         if (!count) throw new Error("Voting has already opened, so nominees can't be removed. Ask a JFF admin.");
       },
-      // Upload an already-resized JPEG for a nominee, then save it on the nomination.
-      async uploadPhoto(weekId, playerId, blob) {
+      // Save a nominee photo as three files (see supabase/photo-sizes.sql):
+      // small + medium in the public bucket, full quality in the private one.
+      // `v` comes from JFF.photoVersions(). Returns the new photo_path (the small file).
+      async uploadPhoto(weekId, playerId, v) {
         const NOPE = "This photo can't be changed now. Voting has closed, or you're not this team's captain.";
         const prev = (await sb.from('potw_nominations').select('photo_path').eq('week_id', weekId).eq('player_id', playerId).maybeSingle()).data?.photo_path;
-        const path = `${weekId}/${playerId}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.jpg`;
-        const up = await sb.storage.from('nominee-photos').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
-        if (up.error) {
-          if (/row-level security|403|Unauthorized/i.test(up.error.message || '')) throw new Error(NOPE);
-          throw up.error;
+        const base = `${weekId}/${playerId}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+        const opts = { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false };
+        const ups = await Promise.all([
+          sb.storage.from(PUB).upload(base + '-sm.jpg', v.sm, opts),
+          sb.storage.from(PUB).upload(base + '-md.jpg', v.md, opts),
+          sb.storage.from(FULL).upload(base + '-full.jpg', v.full, opts),
+        ]);
+        const err = ups.find((u) => u.error)?.error;
+        if (err) {
+          await removePhoto(base + '-sm.jpg');
+          if (/row-level security|403|Unauthorized/i.test(err.message || '')) throw new Error(NOPE);
+          throw err;
         }
+        const path = base + '-sm.jpg';
         const rows = ok(await sb.from('potw_nominations').update({ photo_path: path }).eq('week_id', weekId).eq('player_id', playerId).select('player_id'));
-        if (!rows.length) {
-          await sb.storage.from('nominee-photos').remove([path]).catch(() => {});
-          throw new Error(NOPE);
-        }
-        // The new photo is saved; remove the old file. If this fails, the old file just stays unused.
-        if (prev && prev !== path) {
-          const rm = await sb.storage.from('nominee-photos').remove([prev]).catch((e) => ({ error: e }));
-          if (rm.error) console.warn('Old photo not removed', rm.error);
-        }
+        if (!rows.length) { await removePhoto(path); throw new Error(NOPE); }
+        // The new photo is saved; remove the old files. If this fails, they just stay unused.
+        if (prev && prev !== path) await removePhoto(prev);
         return path;
       },
-      photoUrl(path) { return path ? `${cfg.SUPABASE_URL}/storage/v1/object/public/nominee-photos/${path}` : null; },
+      // Card photo (small). Older single-file photos are returned as they are.
+      photoUrl(path) { return path ? `${PUB_URL}/${path}` : null; },
+      // Story photo (medium), falling back to the card photo for older uploads.
+      photoMdUrl(path) { return path ? `${PUB_URL}/${isNew(path) ? path.replace(/-sm\.jpg$/, '-md.jpg') : path}` : null; },
+      isOldPhoto(path) { return !!path && !isNew(path); },
+      // Full-quality download link for admins/designers (expires after an hour).
+      async fullPhotoUrl(path, filename) {
+        if (!path) return null;
+        if (!isNew(path)) return `${PUB_URL}/${path}` + (filename ? `?download=${encodeURIComponent(filename)}` : '');
+        const { data, error } = await sb.storage.from(FULL).createSignedUrl(path.replace(/-sm\.jpg$/, '-full.jpg'), 3600, filename ? { download: filename } : undefined);
+        if (error) throw error;
+        return data.signedUrl;
+      },
+      async isMedia() { return !!ok(await sb.rpc('potw_is_media')); },
+      async listDesigners() { return ok(await sb.from('potw_designers').select('email,added_at').order('email')); },
+      async addDesigner(email) {
+        const { error } = await sb.from('potw_designers').insert({ email: email.trim().toLowerCase() });
+        if (error && error.code !== '23505') throw error;
+      },
+      async removeDesigner(email) { ok(await sb.from('potw_designers').delete().eq('email', email)); },
+      // Nominations (all weeks) still on an older single-file photo.
+      async listOldPhotos() {
+        const rows = ok(await sb.from('potw_nominations').select('week_id,player_id,photo_path').not('photo_path', 'is', null));
+        return rows.filter((r) => !isNew(r.photo_path));
+      },
+      async fetchPhoto(path) {
+        const r = await fetch(`${PUB_URL}/${path}`);
+        if (!r.ok) throw new Error('Could not load photo ' + path);
+        return r.blob();
+      },
       async listCaptains() { return ok(await sb.from('team_captains').select('team_id,email').order('team_id')); },
       async addCaptain(teamId, email) {
         const { error } = await sb.from('team_captains').insert({ team_id: teamId, email: email.trim().toLowerCase() });
@@ -182,13 +226,26 @@
         save(state); await delay();
       },
       async unnominate(weekId, playerId) { state.nominations = (state.nominations || []).filter((n) => !(n.week_id === weekId && n.player_id === playerId)); save(state); },
-      async uploadPhoto(weekId, playerId, blob) {
+      async uploadPhoto(weekId, playerId, v) {
         const n = (state.nominations || []).find((x) => x.week_id === weekId && x.player_id === playerId);
         if (!n) throw new Error('Nominate the player first.');
-        n.photo_path = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); });
+        const url = (b) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
+        // Demo keeps small + medium only (full-size data URLs would overflow browser storage).
+        const [sm, md] = await Promise.all([url(v.sm), url(v.md)]);
+        if (n.photo_path) delete (state.photoMd || {})[n.photo_path];
+        n.photo_path = sm; (state.photoMd ||= {})[sm] = md;
         save(state); await delay(); return n.photo_path;
       },
       photoUrl(path) { return path || null; },
+      photoMdUrl(path) { return (path && state.photoMd?.[path]) || path || null; },
+      isOldPhoto(path) { return !!path && !state.photoMd?.[path]; },
+      async fullPhotoUrl(path) { return (path && state.photoMd?.[path]) || path || null; },
+      async isMedia() { return !!state.user; },
+      async listDesigners() { return [...(state.designers || [])]; },
+      async addDesigner(email) { state.designers ||= []; if (!state.designers.some((d) => d.email === email)) state.designers.push({ email: email.trim().toLowerCase() }); save(state); },
+      async removeDesigner(email) { state.designers = (state.designers || []).filter((d) => d.email !== email); save(state); },
+      async listOldPhotos() { return (state.nominations || []).filter((n) => n.photo_path && !state.photoMd?.[n.photo_path]); },
+      async fetchPhoto(path) { return (await fetch(path)).blob(); },
       async listCaptains() { return [...(state.captains || [])]; },
       async addCaptain(team_id, email) { state.captains ||= []; state.captains.push({ team_id, email: email.trim().toLowerCase() }); save(state); },
       async removeCaptain(teamId, email) { state.captains = (state.captains || []).filter((c) => !(c.team_id === teamId && c.email === email)); save(state); },
@@ -227,6 +284,34 @@
       return team.logo
         ? `<img class="${cls}" src="team-logos/${JFF.esc(team.logo)}" alt="${JFF.esc(team.name)}" loading="lazy">`
         : `<span class="${cls} team-logo-fallback">${JFF.esc(JFF.initials(team.name))}</span>`;
+    },
+    // Make the three photo sizes from a picked file. Never upscales.
+    // keepFull: use the given file as the full-quality copy as it is (for converting older photos).
+    async photoVersions(file, keepFull = false) {
+      let src;
+      try { src = await createImageBitmap(file); }
+      catch {
+        src = await new Promise((res, rej) => {
+          const i = new Image(); i.onload = () => res(i);
+          i.onerror = () => rej(new Error("Couldn't read this photo. Try a JPG or PNG (on iPhone, a screenshot of the photo works)."));
+          i.src = URL.createObjectURL(file);
+        });
+      }
+      const W = src.width, H = src.height;
+      const enc = (r, q) => {
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(W * r)); c.height = Math.max(1, Math.round(H * r));
+        c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+        return new Promise((res) => c.toBlob(res, 'image/jpeg', q));
+      };
+      // Enough pixels to fill a w×h (4:5) crop.
+      const fill = (w, h) => Math.min(1, Math.max(w / W, h / H));
+      // One at a time, to keep memory low on phones.
+      const sm = await enc(fill(600, 750), 0.8);
+      const md = await enc(fill(1080, 1350), 0.84);
+      const full = keepFull ? file : await enc(Math.min(1, 3000 / Math.max(W, H)), 0.9);
+      src.close?.();
+      return { sm, md, full };
     },
     toast(msg, kind = '') {
       let el = document.getElementById('toast');

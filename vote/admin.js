@@ -75,6 +75,45 @@
     }).join('');
   }
 
+  async function renderDesigners() {
+    let rows;
+    try { rows = await api.listDesigners(); }
+    catch (e) { $('designers').innerHTML = '<p class="lb-empty">Run supabase/photo-sizes.sql in Supabase to turn on designers.</p>'; return; }
+    $('designerCount').textContent = `${rows.length} designer${rows.length === 1 ? '' : 's'}`;
+    $('designers').innerHTML = rows.length
+      ? rows.map((r) => `<div class="captain-row"><span>${esc(r.email)}</span><button class="btn-link" data-undesigner="${esc(r.email)}" style="color:#a44">Remove</button></div>`).join('')
+      : '<div class="captain-row"><span style="color:#555">No designers yet. Admins can always use the winners page.</span></div>';
+    renderOldPhotos();
+  }
+
+  // Photos uploaded before the three-size setup: one big public file each.
+  async function renderOldPhotos() {
+    let old = [];
+    try { old = await api.listOldPhotos(); } catch (e) { console.error(e); }
+    $('oldPhotos').innerHTML = old.length
+      ? `<b>${old.length} older photo${old.length === 1 ? '' : 's'} still full size on the vote page.</b><br>
+         Converting makes a small copy for the vote page, keeps the full-quality file private, and deletes the big public one. Takes about a minute; keep this page open.
+         <br><button class="btn-primary btn-sm" id="convertBtn" style="margin-top:.75rem">Convert ${old.length} photo${old.length === 1 ? '' : 's'}</button>`
+      : '✓ All photos use the small vote-page size.';
+  }
+
+  async function convertOldPhotos(btn) {
+    const old = await api.listOldPhotos();
+    let done = 0, failed = 0;
+    btn.disabled = true;
+    for (const n of old) {
+      btn.textContent = `Converting ${done + failed + 1} of ${old.length}…`;
+      try {
+        const blob = await api.fetchPhoto(n.photo_path);
+        const v = await JFF.photoVersions(blob, true);
+        await api.uploadPhoto(n.week_id, n.player_id, v);
+        done++;
+      } catch (e) { console.error(n, e); failed++; }
+    }
+    JFF.toast(failed ? `Converted ${done}, ${failed} failed. Try again.` : `Converted ${done} photo${done === 1 ? '' : 's'}`, failed ? 'error' : '');
+    renderOldPhotos();
+  }
+
   async function exportCsv(id) {
     const w = (await api.listWeeks()).find((x) => x.id === id);
     const rows = await api.leaderboard(id);
@@ -100,6 +139,8 @@
       else if (d.reopen) await api.updateWeek(+d.reopen, { closed: false });
       else if (d.extend) { const w = (await api.listWeeks()).find((x) => x.id === +d.extend); await api.updateWeek(w.id, { ends_at: new Date(+new Date(w.ends_at) + 864e5).toISOString() }); }
       else if (d.csv) return exportCsv(+d.csv);
+      else if (d.undesigner) { if (!confirm(`Remove ${d.undesigner} as a designer?`)) return; await api.removeDesigner(d.undesigner); JFF.toast('Designer removed'); return renderDesigners(); }
+      else if (t.id === 'convertBtn') { await convertOldPhotos(t); return; }
       else if (d.uncaptain) { if (!confirm(`Remove ${d.email} as captain of ${teams[d.uncaptain].name}?`)) return; await api.removeCaptain(d.uncaptain, d.email); JFF.toast('Captain removed'); return renderCaptains(); }
       else if (d.clear) {
         if (!confirm(`Remove ALL votes in "${d.label}"? The week stays open, and everyone (including you) can vote again. This cannot be undone.`)) return;
@@ -136,6 +177,12 @@
       e.target.email.value = ''; JFF.toast(`Added ${email} to ${teams[team].name}`); renderCaptains();
     } catch (err) { JFF.toast(err.message, 'error'); }
   });
+  $('newDesigner').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = String(new FormData(e.target).get('email')).trim().toLowerCase();
+    try { await api.addDesigner(email); e.target.email.value = ''; JFF.toast(`Added ${email}`); renderDesigners(); }
+    catch (err) { JFF.toast(err.message, 'error'); }
+  });
   $('newWeek').nominations.addEventListener('change', (e) => {
     $('startsLabel').textContent = e.target.checked ? 'Voting opens · nominations close (WIB)' : 'Opens (WIB)';
   });
@@ -162,7 +209,7 @@
     }
     $('gate').innerHTML = `<div class="auth-bar" style="margin-bottom:1.5rem"><p>Signed in as <b>${esc(user.email)}</b></p><button class="btn-link" id="signOutA">Sign out</button></div>`;
     $('adminBody').style.display = 'block';
-    setDefaults(); render(); renderCaptains();
+    setDefaults(); render(); renderCaptains(); renderDesigners();
   }
 
   api.onAuthChange(gate);
