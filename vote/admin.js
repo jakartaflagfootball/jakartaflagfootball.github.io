@@ -114,6 +114,30 @@
     renderOldPhotos();
   }
 
+  // Copy games and final scores from season.json into the pick'em tables.
+  async function syncPickem(btn) {
+    const key = window.JFF_CONFIG.PICKEM_SEASON;
+    if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+    try {
+      const season = await JFF.loadSeason();
+      const rows = JFF.pickemRows(season, key);
+      const before = Object.fromEntries((await api.pickemGames(key)).map((g) => [g.id, g]));
+      await api.syncPickemGames(rows);
+      const scored = rows.filter((r) => r.home_score != null && before[r.id]?.home_score == null).length;
+      const added = rows.filter((r) => !before[r.id]).length;
+      const finals = rows.filter((r) => r.home_score != null).length;
+      $('pickemCount').textContent = `${rows.length} games · ${finals} final`;
+      $('pickemSync').innerHTML = `✓ Synced ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}: ${rows.length} games, ${finals} with final scores`
+        + (added ? ` · ${added} new` : '') + (scored ? ` · ${scored} new score${scored === 1 ? '' : 's'}` : '') + '.';
+      if (btn) JFF.toast('Pick\'em synced');
+    } catch (e) {
+      console.error(e);
+      $('pickemSync').innerHTML = /pickem_games|relation|schema cache/i.test(e.message || '')
+        ? 'Run <code>supabase/pickem.sql</code> in Supabase to turn on Feeling Gue Sih….'
+        : `Sync failed: ${esc(e.message || 'unknown error')}`;
+    } finally { if (btn) { btn.disabled = false; btn.textContent = 'Sync games & scores now'; } }
+  }
+
   async function exportCsv(id) {
     const w = (await api.listWeeks()).find((x) => x.id === id);
     const rows = await api.leaderboard(id);
@@ -141,6 +165,7 @@
       else if (d.csv) return exportCsv(+d.csv);
       else if (d.undesigner) { if (!confirm(`Remove ${d.undesigner} as a designer?`)) return; await api.removeDesigner(d.undesigner); JFF.toast('Designer removed'); return renderDesigners(); }
       else if (t.id === 'convertBtn') { await convertOldPhotos(t); return; }
+      else if (t.id === 'pickemSyncBtn') { await syncPickem(t); return; }
       else if (d.uncaptain) { if (!confirm(`Remove ${d.email} as captain of ${teams[d.uncaptain].name}?`)) return; await api.removeCaptain(d.uncaptain, d.email); JFF.toast('Captain removed'); return renderCaptains(); }
       else if (d.clear) {
         if (!confirm(`Remove ALL votes in "${d.label}"? The week stays open, and everyone (including you) can vote again. This cannot be undone.`)) return;
@@ -209,7 +234,7 @@
     }
     $('gate').innerHTML = `<div class="auth-bar" style="margin-bottom:1.5rem"><p>Signed in as <b>${esc(user.email)}</b></p><button class="btn-link" id="signOutA">Sign out</button></div>`;
     $('adminBody').style.display = 'block';
-    setDefaults(); render(); renderCaptains(); renderDesigners();
+    setDefaults(); render(); renderCaptains(); renderDesigners(); syncPickem();
   }
 
   api.onAuthChange(gate);

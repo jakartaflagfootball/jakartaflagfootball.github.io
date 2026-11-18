@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feeling Gue Sih… — JFF Pick'em</title>
+<meta name="description" content="Tebak who wins every Open SZN IV game. 1 point for the right winner, +1 if you nail the margin. Climb the JFF leaderboard.">
+<meta property="og:title" content="Feeling Gue Sih… — JFF Pick'em">
+<meta property="og:description" content="Tebak who wins every Open SZN IV game and climb the leaderboard.">
+<meta property="og:image" content="jff-logo.png">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0e0e0e">
+<link rel="icon" href="jff-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="pk-page">
+
+<nav class="nav">
+  <a class="nav-logo" href="https://jakartaflagfootball.com/">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">JFF Stats<span>Pick'em</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="https://jakartaflagfootball.com/open-szn-4/">← Open SZN IV</a>
+    <a href="index.html" class="hide-sm">Player of the Week</a>
+    <a href="#how" class="hide-xs">How it works</a>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <div class="eyebrow" id="seasonLabel">Open SZN IV</div>
+    <h1 class="page-title"><span class="title-kicker">JFF Pick'em</span>Feeling Gue <span>Sih…</span></h1>
+    <p class="page-sub">Tebak who wins every game. 1 point for the right winner, +1 bonus if you also call the margin. Picks lock at kickoff.</p>
+    <div class="week-bar">
+      <div class="week-stat"><b id="myPoints">—</b><small>Your points</small></div>
+      <div class="week-stat"><b id="myRank">—</b><small>Your rank</small></div>
+      <div class="week-stat"><b id="nextLock">—</b><small id="nextLockLabel">Next game locks in</small></div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div id="demoBanner"></div>
+  <div class="auth-bar" id="authBar"></div>
+
+  <div class="pk-rounds" id="rounds" role="tablist"></div>
+
+  <div class="vote-layout">
+    <section>
+      <div class="section-header">
+        <h2 id="roundTitle">Games</h2>
+        <small id="roundSub"></small>
+      </div>
+      <div id="games"><p class="lb-empty">Loading games…</p></div>
+      <div class="pk-share" id="shareBox"></div>
+    </section>
+
+    <aside class="lb-panel">
+      <div class="section-header">
+        <h2>Leaderboard</h2>
+        <div class="pk-toggle" id="lbToggle">
+          <button type="button" data-lb="season" class="active">Season</button>
+          <button type="button" data-lb="round">This round</button>
+        </div>
+      </div>
+      <div class="lb" id="leaderboard"></div>
+      <div class="lb-updated">Points count once JFF confirms each final score.</div>
+    </aside>
+  </div>
+
+  <section id="how" style="padding-bottom:4rem">
+    <div class="section-header"><h2>How it works</h2></div>
+    <div style="color:var(--muted);font-size:.92rem;max-width:720px;display:grid;gap:.6rem">
+      <p><b style="color:var(--text)">1. Pick a winner</b> for each game. Change your mind as often as you like until kickoff, then it locks.</p>
+      <p><b style="color:var(--text)">2. Call the margin</b> for a bonus point (optional): <b style="color:var(--text)">Tipis</b> wins by 1–13, <b style="color:var(--text)">Aman</b> by 14–27, <b style="color:var(--text)">Bantai</b> by 28 or more.</p>
+      <p><b style="color:var(--text)">3. Score:</b> right winner = 1 point, right winner and margin = 2 points. A draw scores nobody.</p>
+      <p><b style="color:var(--text)">4. Climb the leaderboard.</b> The season's top predictor gets crowned on JFF's socials. Only the name you choose is shown, never your email.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <img src="jff-logo.png" alt="JFF">
+  <p>Jakarta Flag Football · Est. 2022</p>
+  <p class="footer-small">Feeling Gue Sih… JFF Pick'em</p>
+</footer>
+
+<!-- Sign in -->
+<div class="modal-back" id="signinModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+    <button class="modal-close" data-close>✕</button>
+    <h3 id="signinTitle">Sign in to pick</h3>
+    <p>We use Google sign-in to save your picks and keep the leaderboard fair. Only the name you choose is shown.</p>
+    <div class="modal-actions signin-slot" id="modalSignin"></div>
+  </div>
+</div>
+
+<!-- Leaderboard name -->
+<div class="modal-back" id="nameModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+    <button class="modal-close" data-close>✕</button>
+    <h3 id="nameTitle">Your leaderboard name</h3>
+    <p>This is what other fans see. You can change it any time.</p>
+    <form id="nameForm" class="pk-name-form">
+      <input name="name" class="search-input" maxlength="24" minlength="2" required autocomplete="nickname" placeholder="e.g. Raka F.">
+      <div class="modal-actions">
+        <button class="btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=pk2"></script>
+<script src="jff-auth.js"></script>
+<script src="roster.js"></script>
+<script src="api.js?v=pk2"></script>
+<script src="feeling.js?v=pk2"></script>
+</body>
+</html>

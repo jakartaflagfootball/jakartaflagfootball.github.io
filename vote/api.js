@@ -147,6 +147,41 @@
         if (error && error.code !== '23505') throw error;
       },
       async removeCaptain(teamId, email) { ok(await sb.from('team_captains').delete().eq('team_id', teamId).eq('email', email)); },
+      // ─── Feeling Gue Sih… (pick'em, see supabase/pickem.sql) ───
+      async pickemGames(season) { return ok(await sb.from('pickem_games').select('*').eq('season', season)); },
+      async myPicks(season) {
+        const user = await this.getUser(); if (!user) return {};
+        const rows = ok(await sb.from('pickem_picks').select('game_id,winner,margin').eq('user_id', user.id).like('game_id', season + ':%'));
+        return Object.fromEntries(rows.map((r) => [r.game_id, r]));
+      },
+      async savePick(gameId, winner, margin) {
+        const user = await this.getUser(); if (!user) throw new Error('Please sign in first.');
+        const { error } = await sb.from('pickem_picks').upsert(
+          { game_id: gameId, user_id: user.id, winner, margin: margin || null, updated_at: new Date().toISOString() },
+          { onConflict: 'game_id,user_id' });
+        if (error) {
+          if (error.code === '42501') throw new Error('This game has kicked off, so picks are locked.');
+          throw error;
+        }
+      },
+      async clearPick(gameId) {
+        const user = await this.getUser(); if (!user) return;
+        ok(await sb.from('pickem_picks').delete().eq('game_id', gameId).eq('user_id', user.id));
+      },
+      // Split per game, only for games this fan picked. Signed out: nothing.
+      async pickemCrowd(season) { if (!(await this.getUser())) return []; return ok(await sb.rpc('pickem_crowd', { s: season })); },
+      async pickemCounts(season) { return ok(await sb.rpc('pickem_pick_counts', { s: season })); },
+      async pickemLeaderboard(season, round) { return ok(await sb.rpc('pickem_leaderboard', { s: season, rk: round || null })); },
+      async myPickemName() {
+        const user = await this.getUser(); if (!user) return null;
+        return (await sb.from('pickem_players').select('display_name').eq('user_id', user.id).maybeSingle()).data?.display_name || null;
+      },
+      async setPickemName(name) {
+        const user = await this.getUser(); if (!user) throw new Error('Please sign in first.');
+        ok(await sb.from('pickem_players').upsert({ user_id: user.id, display_name: name.trim() }, { onConflict: 'user_id' }));
+      },
+      // Admin: copy games and results from season.json (rows from JFF.pickemRows). Never deletes.
+      async syncPickemGames(rows) { ok(await sb.from('pickem_games').upsert(rows, { onConflict: 'id' })); return rows.length; },
     };
   }
 
@@ -249,6 +284,68 @@
       async listCaptains() { return [...(state.captains || [])]; },
       async addCaptain(team_id, email) { state.captains ||= []; state.captains.push({ team_id, email: email.trim().toLowerCase() }); save(state); },
       async removeCaptain(teamId, email) { state.captains = (state.captains || []).filter((c) => !(c.team_id === teamId && c.email === email)); save(state); },
+      // ─── Feeling Gue Sih… (demo) ───
+      async pickemGames(season) { return delay(Object.values(state.pkGames || {}).filter((g) => g.season === season)); },
+      async myPicks(season) {
+        if (!state.user) return {};
+        return Object.fromEntries((state.pkPicks || []).filter((p) => p.user_id === state.user.id && p.game_id.startsWith(season + ':')).map((p) => [p.game_id, p]));
+      },
+      async savePick(gameId, winner, margin) {
+        if (!state.user) throw new Error('Please sign in first.');
+        const g = state.pkGames?.[gameId];
+        if (!g || !g.home || !g.away || Date.now() >= +new Date(g.kickoff) || ![g.home, g.away].includes(winner)) throw new Error('This game has kicked off, so picks are locked.');
+        state.pkPicks = state.pkPicks.filter((p) => !(p.game_id === gameId && p.user_id === state.user.id));
+        state.pkPicks.push({ game_id: gameId, user_id: state.user.id, winner, margin: margin || null });
+        save(state); await delay();
+      },
+      async clearPick(gameId) { state.pkPicks = (state.pkPicks || []).filter((p) => !(p.game_id === gameId && p.user_id === state.user?.id)); save(state); },
+      async pickemCrowd(season) {
+        if (!state.user) return [];
+        const mine = new Set((state.pkPicks || []).filter((p) => p.user_id === state.user.id).map((p) => p.game_id));
+        const m = new Map();
+        for (const p of state.pkPicks || []) if (p.game_id.startsWith(season + ':') && mine.has(p.game_id)) { const k = p.game_id + '|' + p.winner; m.set(k, (m.get(k) || 0) + 1); }
+        return delay([...m].map(([k, picks]) => { const [game_id, winner] = k.split('|'); return { game_id, winner, picks }; }));
+      },
+      async pickemCounts(season) {
+        const m = new Map();
+        for (const p of state.pkPicks || []) if (p.game_id.startsWith(season + ':')) m.set(p.game_id, (m.get(p.game_id) || 0) + 1);
+        return delay([...m].map(([game_id, picks]) => ({ game_id, picks })));
+      },
+      async pickemLeaderboard(season, round) {
+        const t = new Map();
+        for (const p of state.pkPicks || []) {
+          const g = state.pkGames[p.game_id];
+          if (!g || g.season !== season || (round && g.round_key !== round) || g.home_score == null || g.away_score == null) continue;
+          const win = g.home_score > g.away_score ? g.home : g.away_score > g.home_score ? g.away : null;
+          const ok = p.winner === win, m = ok && p.margin === JFF.pickemMargin(g.home_score, g.away_score);
+          const r = t.get(p.user_id) || { points: 0, correct: 0, bonus: 0, picked: 0 };
+          r.points += ok + m; r.correct += ok; r.bonus += m; r.picked++; t.set(p.user_id, r);
+        }
+        const rows = [...t].map(([u, r]) => ({ ...r, name: state.pkNames?.[u] || 'Fan', me: u === state.user?.id }))
+          .sort((a, b) => b.points - a.points || b.correct - a.correct || a.name.localeCompare(b.name));
+        rows.forEach((r, i) => { r.rank = i && r.points === rows[i - 1].points && r.correct === rows[i - 1].correct ? rows[i - 1].rank : i + 1; });
+        return delay(rows);
+      },
+      async myPickemName() { return state.user ? state.pkNames?.[state.user.id] || null : null; },
+      async setPickemName(name) { (state.pkNames ||= {})[state.user.id] = name.trim(); save(state); },
+      async syncPickemGames(rows) {
+        state.pkGames ||= {}; state.pkPicks ||= []; state.pkNames ||= {};
+        const fresh = !Object.keys(state.pkGames).length;
+        for (const r of rows) state.pkGames[r.id] = r;
+        // Fake fans so the crowd bars and leaderboard have something to show.
+        if (fresh) {
+          const names = ['Raka', 'Dinda P.', 'Bimo', 'Sasa', 'Kevin T.', 'Ayu', 'Gilang', 'Nadia R.', 'Fajar', 'Putri', 'Dimas', 'Tasya', 'Rio', 'Mega', 'Yoga'];
+          names.forEach((n, i) => {
+            const u = 'fan-' + i; state.pkNames[u] = n;
+            for (const r of rows) {
+              if (!r.home || !r.away || Math.random() < 0.25) continue;
+              const winner = Math.random() < 0.6 ? r.home : r.away;
+              state.pkPicks.push({ game_id: r.id, user_id: u, winner, margin: ['tipis', 'aman', 'bantai', null][Math.floor(Math.random() * 4)] });
+            }
+          });
+        }
+        save(state); return rows.length;
+      },
       resetDemo() { try { localStorage.removeItem(KEY); } catch {} location.reload(); },
     };
   }
@@ -312,6 +409,32 @@
       const full = keepFull ? file : await enc(Math.min(1, 3000 / Math.max(W, H)), 0.9);
       src.close?.();
       return { sm, md, full };
+    },
+    // ─── Feeling Gue Sih… ───
+    MARGINS: [
+      { id: 'tipis', label: 'Tipis', range: '1–13' },
+      { id: 'aman', label: 'Aman', range: '14–27' },
+      { id: 'bantai', label: 'Bantai', range: '28+' },
+    ],
+    pickemMargin(h, a) { const d = Math.abs(h - a); return d <= 13 ? 'tipis' : d <= 27 ? 'aman' : 'bantai'; },
+    async loadSeason() {
+      const r = await fetch(`${cfg.SEASON_JSON_URL}?v=${Math.floor(Date.now() / 60000)}`);
+      if (!r.ok) throw new Error('Could not load the schedule.');
+      return r.json();
+    },
+    // season.json games → pickem_games rows.
+    pickemRows(season, key = cfg.PICKEM_SEASON) {
+      const now = new Date().toISOString();
+      return season.games.filter((g) => g.id && g.date && g.time).map((g) => ({
+        id: `${key}:${g.id}`, season: key,
+        round_key: g.stage === 'playoff' ? 'playoffs' : 'w' + g.week,
+        division: g.division,
+        kickoff: new Date(`${g.date}T${g.time}:00+07:00`).toISOString(),
+        home: g.home || null, away: g.away || null,
+        home_score: g.home && g.away && g.homeScore != null ? g.homeScore : null,
+        away_score: g.home && g.away && g.awayScore != null ? g.awayScore : null,
+        updated_at: now,
+      }));
     },
     toast(msg, kind = '') {
       let el = document.getElementById('toast');

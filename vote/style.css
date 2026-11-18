@@ -402,3 +402,77 @@ body[data-side="defense"] { --side: var(--def); --side-bright: var(--def-bright)
 @media (max-width: 480px) {
   .nav-links a.hide-xs { display: none; }
 }
+
+/* ─── FEELING GUE SIH… (pick'em) ─── */
+.pk-rounds { display: flex; gap: .5rem; margin: 2rem 0 1.5rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.pk-rounds::-webkit-scrollbar { display: none; }
+.pk-round { flex: 1 0 auto; min-width: 104px; text-align: left; padding: .7rem .9rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; position: relative; transition: border-color .2s; }
+.pk-round:hover { border-color: #444; }
+.pk-round.active { border-color: var(--gold); background: rgba(201,168,76,.08); }
+.pk-round.todo::after { content: ''; position: absolute; top: .55rem; right: .55rem; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-bright); }
+.pk-slot { margin-bottom: 1.5rem; }
+.pk-slot h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; letter-spacing: .05em; color: var(--gold); margin-bottom: .5rem; }
+.pk-slot h3 small { font-family: var(--font-body); font-size: .65rem; letter-spacing: .15em; color: var(--muted); }
+.pk-list { display: grid; gap: .65rem; }
+.pk-game { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .8rem; }
+.pk-game.is-right { border-color: rgba(46,204,113,.45); }
+.pk-meta { display: flex; justify-content: space-between; gap: .5rem; font-size: .72rem; color: var(--muted); margin-bottom: .6rem; }
+.pk-state { white-space: nowrap; letter-spacing: .06em; }
+.pk-state.open { color: var(--ok); }
+.pk-state.final { color: var(--text); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.pk-teams { display: grid; grid-template-columns: 1fr auto 1fr; gap: .5rem; align-items: stretch; }
+.pk-vs { align-self: center; font-family: var(--font-display); color: #555; font-size: 1rem; letter-spacing: .08em; }
+.pk-team { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; min-height: 104px; padding: .7rem .4rem; background: var(--bg); border: 2px solid var(--border); border-radius: 6px; text-align: center; transition: border-color .15s, background .15s, transform .1s; }
+.pk-team:not(:disabled):hover { border-color: #555; }
+.pk-team:not(:disabled):active { transform: scale(.97); }
+.pk-team .team-logo { width: 42px; height: 42px; }
+.pk-team b { font-size: .9rem; font-weight: 600; line-height: 1.2; }
+.pk-team.mine { border-color: var(--gold); background: rgba(201,168,76,.1); }
+.pk-team.mine.right { border-color: var(--ok); background: rgba(46,204,113,.1); }
+.pk-team.mine.wrong { border-color: rgba(231,76,60,.6); background: rgba(231,76,60,.08); }
+.pk-team:disabled { cursor: default; }
+.pk-team:disabled:not(.mine) { opacity: .8; }
+.pk-team.tba { opacity: .5; }
+.pk-team.won .pk-score { color: var(--text); }
+.pk-score { font-family: var(--font-display); font-size: 1.7rem; line-height: 1; color: var(--muted); }
+.pk-tick { position: absolute; top: .35rem; right: .45rem; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #111; font-size: .72rem; font-weight: 700; display: grid; place-items: center; }
+.pk-team.right .pk-tick { background: var(--ok); }
+.pk-team.wrong .pk-tick { background: var(--accent-bright); color: #fff; }
+.pk-crowd { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "l bar r" ". n ."; align-items: center; gap: .15rem .5rem; margin-top: .65rem; font-size: .72rem; color: var(--muted); }
+.pk-crowd > span:first-of-type { grid-area: l; } .pk-crowd > span:last-of-type { grid-area: r; }
+.pk-crowd small { grid-area: n; text-align: center; font-size: .66rem; color: #666; }
+.pk-crowd-bar { grid-area: bar; height: 6px; border-radius: 3px; background: #3a2a1a; overflow: hidden; }
+.pk-crowd-bar i { display: block; height: 100%; background: var(--gold); transition: width .4s; }
+.pk-crowd.empty { display: block; text-align: center; color: #666; }
+.pk-margin { margin-top: .7rem; padding-top: .7rem; border-top: 1px dashed var(--border); }
+.pk-margin > span { display: block; font-size: .74rem; color: var(--muted); margin-bottom: .4rem; }
+.pk-margin > span small { color: var(--gold); margin-left: .3rem; }
+.pk-margin > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+.pk-margin button { padding: .45rem .3rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); line-height: 1.15; }
+.pk-margin button b { display: block; font-size: .82rem; }
+.pk-margin button small { font-size: .66rem; color: var(--muted); }
+.pk-margin button.on { border-color: var(--gold); background: rgba(201,168,76,.12); }
+.pk-margin button:disabled:not(.on) { opacity: .45; }
+.pk-result { margin-top: .6rem; font-size: .8rem; font-weight: 600; }
+.pk-result.ok { color: var(--ok); }
+.pk-result.no { color: var(--muted); font-weight: 500; }
+.pk-share { margin: .5rem 0 2rem; }
+.pk-share:not(:empty) { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+.pk-share p { font-size: .88rem; color: var(--muted); }
+.pk-share p b { color: var(--text); }
+.pk-share-btns { display: flex; gap: .5rem; }
+.pk-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 99px; padding: 2px; }
+.pk-toggle button { font-size: .7rem; padding: .3rem .7rem; border-radius: 99px; color: var(--muted); letter-spacing: .05em; }
+.pk-toggle button.active { background: var(--surface2); color: var(--text); }
+.pk-lb { grid-template-columns: 26px minmax(0,1fr) auto; }
+.pk-lb .lb-bar { background: rgba(201,168,76,.12); }
+.pk-name-form { margin-top: 1rem; }
+@media (max-width: 900px) { .pk-page .lb-panel { order: 0; } }
+.pk-name-form input { width: 100%; }
+@media (max-width: 600px) {
+  .pk-team { min-height: 96px; }
+  .pk-team b { font-size: .84rem; }
+  .pk-share-btns { width: 100%; }
+  .pk-share-btns > * { flex: 1; }
+}
+.pk-crowd.locked { color: var(--gold); }

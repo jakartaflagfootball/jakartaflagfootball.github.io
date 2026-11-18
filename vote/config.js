@@ -16,6 +16,10 @@ window.JFF_CONFIG = {
   // Shown in the header.
   SEASON: 'Open SZN IV',
 
+  // Feeling Gue Sih… (pick'em): the season's id and its schedule file on the main site.
+  PICKEM_SEASON: 'open-szn-4',
+  SEASON_JSON_URL: '../open-szn-4/season.json',
+
   // How often the live leaderboard refreshes, in seconds.
   REFRESH_SECONDS: 15,
 };
