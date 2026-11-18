@@ -476,3 +476,14 @@ body[data-side="defense"] { --side: var(--def); --side-bright: var(--def-bright)
   .pk-share-btns > * { flex: 1; }
 }
 .pk-crowd.locked { color: var(--gold); }
+
+.pk-game.flash { animation: pkFlash 2.2s ease-out; }
+@keyframes pkFlash { 0%, 40% { box-shadow: 0 0 0 3px rgba(201,168,76,.55); } 100% { box-shadow: 0 0 0 3px rgba(201,168,76,0); } }
+.next-play { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; padding: .8rem .9rem; border: 1px solid rgba(201,168,76,.4); border-radius: 4px; background: rgba(201,168,76,.08); font-size: .85rem; color: var(--muted); transition: border-color .2s, background .2s; }
+.next-play b { color: var(--text); }
+.next-play span:last-child { color: var(--gold); font-weight: 600; white-space: nowrap; }
+.next-play:hover { border-color: var(--gold); background: rgba(201,168,76,.14); }
+.next-play:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.next-play.red { border-color: rgba(192,57,43,.45); background: rgba(192,57,43,.1); }
+.next-play.red span:last-child { color: var(--accent-bright); }
+.next-play.red:hover { border-color: var(--accent-bright); }

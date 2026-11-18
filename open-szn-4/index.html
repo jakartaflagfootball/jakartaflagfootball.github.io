@@ -142,6 +142,9 @@ table.st { width: 100%; border-collapse: collapse; font-variant-numeric: tabular
 .g-row.win .nm, .g-row.win .sc { color: var(--text); }
 .g-row.win .nm { font-weight: 600; }
 .g-row.up .nm { color: var(--text); }
+.g-side .tag.pick { font-size: .66rem; padding: .32rem .6rem; background: rgba(201,168,76,.14); color: var(--gold); border: 1px solid rgba(201,168,76,.45); cursor: pointer; }
+.g-side .tag.pick:hover { background: rgba(201,168,76,.26); }
+.g-side .tag.pick:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .g-side { display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; }
 .chev { color: var(--muted); font-size: 1.1rem; line-height: 1; }
 .tag { font-size: .6rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .18rem .4rem; border-radius: 3px; background: rgba(192,57,43,.15); color: var(--accent-bright); }
@@ -359,6 +362,7 @@ a.bm:hover { border-color: var(--accent); }
       <a data-view="playoffs" href="#playoffs">Playoffs</a>
       <a data-view="teams" href="#teams">Teams</a>
       <a class="tab-vote" href="../vote/">Vote</a>
+      <a class="tab-vote" href="../vote/feeling.html">Pick'em</a>
     </nav>
   </div>
 </div>

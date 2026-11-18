@@ -264,6 +264,18 @@
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.modal-back.show').forEach((m) => m.classList.remove('show')); });
 
+  // Links like feeling.html#g-w3-20 (from the Open SZN IV games list) open that game.
+  function focusFromHash() {
+    const id = decodeURIComponent(location.hash.replace(/^#g-/, ''));
+    const g = id && S.games.find((x) => x.id === `${SEASON}:${id}`);
+    if (!g) return;
+    if (S.round !== g.round_key) { S.round = g.round_key; renderRounds(); renderGames(); loadBoards().then(renderBoard); }
+    const el = document.getElementById('g-' + id); if (!el) return;
+    el.scrollIntoView({ block: 'center' });
+    el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2200);
+  }
+  window.addEventListener('hashchange', focusFromHash);
+
   // ─── START ───
   let current;
   async function onUser(user) {
@@ -281,6 +293,7 @@
     S.user = await api.getUser(); current = S.user?.id || null;
     await Promise.all([loadMine(), loadCrowd(), loadBoards()]);
     renderAll(); tick();
+    focusFromHash();
     setInterval(tick, 1000);
     api.onAuthChange(onUser);
     if (!S.user) api.oneTap();

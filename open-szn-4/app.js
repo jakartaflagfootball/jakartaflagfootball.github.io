@@ -181,13 +181,15 @@
     const label = id ? name(id) : slotText(g[s + 'Slot']);
     return `<div class="g-row ${done ? (win ? 'win' : '') : 'up'} ${id ? '' : 'tbd'}">${logo(id)}<span class="nm">${esc(label)}</span>${done ? `<span class="sc">${g[s === 'home' ? 'homeScore' : 'awayScore']}</span>` : ''}</div>`;
   }
+  // Upcoming game with both teams known: link to it in the Feeling Gue Sih… pick'em.
+  const pickable = (x) => !played(x) && x.home && x.away && x.date && x.time && Date.now() < +new Date(`${x.date}T${x.time}:00+07:00`);
   function gameRow(x) {
     const done = played(x);
     const tag = x.stage === 'playoff' ? `<span class="g-code">${esc(x.id)}</span>` : '';
     return `<a class="game" href="#match-${esc(x.id)}">
       <div class="g-when">${done ? '<span class="ft">FINAL</span>' : `<b>${esc(x.time)}</b>`}${esc(x.field)}${x.field === S.livestream ? '<span class="live">● Live</span>' : ''}</div>
       <div class="g-teams">${tag}${teamLine(x, 'home', done, x.homeScore > x.awayScore)}${teamLine(x, 'away', done, x.awayScore > x.homeScore)}</div>
-      <div class="g-side">${x.recap ? '<span class="tag">Recap</span>' : ''}<span class="chev" aria-hidden="true">›</span></div></a>`;
+      <div class="g-side">${pickable(x) ? `<span class="tag pick" role="link" tabindex="0" data-pickem="${esc(x.id)}" title="Predict this game in Feeling Gue Sih…">Pick</span>` : ''}${x.recap ? '<span class="tag">Recap</span>' : ''}<span class="chev" aria-hidden="true">›</span></div></a>`;
   }
 
   function standingsTable(d, p, compact) {
@@ -444,4 +446,16 @@
     if (S.sample) $('sampleNote').innerHTML = '<p class="sample-note">Pools and schedule are real. Scores for Weeks 1–2 are made up until the Reclub results are connected.</p>';
     route();
   }).catch(() => { $('view').innerHTML = '<p class="empty-note">Season data could not be loaded. Refresh to try again.</p>'; });
+})();
+
+// "Pick" tags sit inside the game link, so open the pick'em instead of the match details.
+(function () {
+  const go = (e) => {
+    const t = e.target.closest('[data-pickem]'); if (!t) return;
+    if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault(); e.stopPropagation();
+    location.href = '../vote/feeling.html#g-' + encodeURIComponent(t.dataset.pickem);
+  };
+  document.addEventListener('click', go, true);
+  document.addEventListener('keydown', go, true);
 })();
