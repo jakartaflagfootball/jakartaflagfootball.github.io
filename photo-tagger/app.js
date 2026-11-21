@@ -132,8 +132,24 @@
   const byNumber = (a, b) => (a.number === '' ? 999 : +a.number) - (b.number === '' ? 999 : +b.number);
   const teamPlayers = (tid) => Object.values(PLAYERS).filter((p) => p.team === tid).sort(byNumber);
 
-  const personLabel = (id) => { const p = S.byId[id]; return p && p.name ? p.name : p ? `Person ${S.num[id]}` : 'Unknown'; };
-  const personKey = (id) => { const p = S.byId[id]; return p && p.name ? 'n:' + p.name.toLowerCase() : 'g:' + id; };
+  // "Not a player" is saved as a reserved name; run.py never merges groups on it
+  const HIDDEN = '~not a player';
+  const isHidden = (p) => !!p?.name && p.name.startsWith('~');
+  const personLabel = (id) => { const p = S.byId[id]; return !p ? 'Unknown' : isHidden(p) ? 'Not a player' : p.name || `Person ${S.num[id]}`; };
+  const personKey = (id) => { const p = S.byId[id]; return p && p.name && !isHidden(p) ? 'n:' + p.name.toLowerCase() : 'g:' + id; };
+  const linked = (p) => (p?.name && !isHidden(p) ? BY_NAME[p.name.toLowerCase()] : null); // roster player a name points to
+  // named, but the name isn't one roster player, or that player's team never played in this face's games
+  const needsCheck = (p) => !!p.name && !isHidden(p) && (!linked(p) || ((p.teams || []).length > 0 && !p.teams.includes(linked(p).team)));
+  // A typed name → the roster's name for that player when it's clearly one player.
+  function canonicalName(typed, p) {
+    const t = typed.trim(), lt = t.toLowerCase();
+    if (!t || t.startsWith('~')) return { name: t };
+    if (BY_NAME[lt]) return { name: rosterName(BY_NAME[lt]) };
+    let c = Object.values(PLAYERS).filter((pl) => nick(pl).toLowerCase() === lt || pl.full_name.toLowerCase() === lt);
+    if (c.length > 1 && (p?.teams || []).length) { const inGames = c.filter((pl) => p.teams.includes(pl.team)); if (inGames.length) c = inGames; }
+    if (c.length === 1) return { name: rosterName(c[0]) };
+    return c.length > 1 ? { name: t, choices: c } : { name: t };
+  }
   const topOf = (f) => f.split('/')[0];
   const shortGame = (f) => f.split('/').slice(1).join(' › ') || f;
   function inGame(p) {
@@ -212,7 +228,7 @@
   function renderHeader() {
     const d = S.data;
     const bursts = new Set(d.photos.map((p) => p.burst)).size;
-    const named = new Set(d.people.filter((p) => p.name).map((p) => p.name.toLowerCase())).size;
+    const named = new Set(d.people.filter((p) => p.name && !isHidden(p)).map((p) => p.name.toLowerCase())).size;
     $('#stats').innerHTML = [[d.photos.length, 'Photos'], [bursts, 'Moments'], [named, 'Named'], [Object.keys(S.star).length, 'Shortlisted']]
       .map(([n, l]) => `<div class="stat"><b>${n}</b><small>${l}</small></div>`).join('');
     $('#starOnly').textContent = `★ Shortlist (${Object.keys(S.star).length})`;
@@ -296,11 +312,18 @@
   }
   const takenName = (name) => S.data.people.some((q) => q.name && q.name.toLowerCase() === name.toLowerCase());
 
-  async function nameGroup(id, name) {
+  async function nameGroup(id, typed) {
     const p = S.byId[id], wasActive = S.person === personKey(id);
+    const { name, choices } = canonicalName(typed, p);
+    if (choices) { // e.g. two players called Ben: ask which one
+      S.choices = { id, players: choices };
+      toast(`${choices.length} players are called ${typed.trim()}. Pick one.`);
+      openFace(id, S.fp?.list || [id]);
+      return false;
+    }
     try { await api.setName(id, name); } catch (e) { toast(e.message || 'Could not save name', 'error'); return false; }
     p.name = name; if (wasActive) S.person = personKey(id);
-    toast(name ? `Named ${name}` : 'Name cleared');
+    toast(isHidden(p) ? 'Hidden: not a player' : name ? `Named ${name}` : 'Name cleared');
     renderHeader(); renderPeople(); renderGrid();
     if (S.idx >= 0) openLb(S.idx);
     if (!$('#fv').hidden) updateFaceCard(id);
@@ -309,18 +332,20 @@
 
   // ─── ALL FACES ──────────────────────────────────────────
   const FV_PAGE = 150;
-  const FV_FILTERS = [['sugg', 'Suggested'], ['unnamed', 'Unnamed'], ['named', 'Named'], ['all', 'All']];
+  const FV_FILTERS = [['sugg', 'Suggested'], ['unnamed', 'Unnamed'], ['named', 'Named'], ['check', '⚠ Check'], ['all', 'All'], ['hidden', 'Not players']];
   S.fv = { filter: 'sugg', q: '', list: [], shown: 0 };
 
   function faceText(p) { // everything a search can match
     const bits = [personLabel(p.id), `person ${S.num[p.id]}`, ...(p.teams || []).map(teamName)];
-    const named = p.name && BY_NAME[p.name.toLowerCase()];
+    const named = linked(p);
     [...(p.sugg || []).map((x) => PLAYERS[x.player]), named].filter(Boolean)
       .forEach((pl) => bits.push(pl.full_name, nick(pl), `#${pl.number}#`, teamName(pl.team)));
     return bits.join(' | ').toLowerCase();
   }
   function faceMatches(p) {
     const f = S.fv.filter;
+    if ((f === 'hidden') !== isHidden(p)) return false;
+    if (f === 'check' && !needsCheck(p)) return false;
     if (f === 'sugg' && !openSugg(p).length) return false;
     if (f === 'unnamed' && p.name) return false;
     if (f === 'named' && !p.name) return false;
@@ -331,11 +356,11 @@
     return words.every((w) => (/^#?\d{1,2}$/.test(w) ? t.includes(`#${w.replace('#', '')}#`) : t.includes(w)));
   }
   function faceCardInner(p, urls) {
-    const sg = openSugg(p)[0], pl = p.name && BY_NAME[p.name.toLowerCase()];
-    const sub = p.name ? (pl ? `#${pl.number} · ${teamName(pl.team)}` : '') :
+    const sg = openSugg(p)[0], pl = linked(p);
+    const sub = isHidden(p) ? '' : p.name ? (needsCheck(p) ? '⚠ check' : '') + (pl ? ` #${pl.number} · ${teamName(pl.team)}` : '') :
       sg ? `${nick(PLAYERS[sg.player])} #${PLAYERS[sg.player].number}?` : (p.teams || []).map(teamName).join(' / ');
     return `<span class="count">${p.count}</span><img src="${esc(urls[p.face] || '')}" alt="" loading="lazy">
-      <span class="nm ${p.name ? '' : 'anon'}">${esc(personLabel(p.id))}</span><span class="sub2 ${sg ? 'gold' : ''}">${esc(sub)}</span>`;
+      <span class="nm ${p.name ? '' : 'anon'}">${esc(personLabel(p.id))}</span><span class="sub2 ${sg || needsCheck(p) ? 'gold' : ''}">${esc(sub)}</span>`;
   }
 
   function openFaces() {
@@ -380,16 +405,18 @@
     S.fp = { id, list: list || [id] };
     const urls = await api.faceUrls([p.face]);
     const photos = S.data.photos.filter((ph) => ph.people.includes(id)).slice(0, 6); // already best-first
-    const sugg = openSugg(p).map((x) => PLAYERS[x.player]);
+    const choices = S.choices?.id === id ? S.choices.players : null; S.choices = null;
+    const sugg = choices || openSugg(p).map((x) => PLAYERS[x.player]);
     const teams = p.teams || [];
     const chip = (pl, sug) => `<button class="pl ${sug ? 'sug' : ''}" data-player="${esc(pl.id)}"><b>#${esc(pl.number)}</b>${esc(nick(pl))}</button>`;
-    let picks = sugg.length ? `<h4>Suggested from jersey number${sugg.length > 1 ? ' (same number on both teams)' : ''}</h4><div class="row-chips">${sugg.map((pl) => chip(pl, true)).join('')}</div>` : '';
+    let picks = sugg.length ? `<h4>${choices ? 'Which one?' : `Suggested from jersey number${sugg.length > 1 ? ' (same number on both teams)' : ''}`}</h4><div class="row-chips">${sugg.map((pl) => chip(pl, true)).join('')}</div>` : '';
     teams.forEach((t) => { const ps = teamPlayers(t); if (ps.length) picks += `<h4>${esc(teamName(t))}</h4><div class="row-chips">${ps.map((pl) => chip(pl, false)).join('')}</div>`; });
     const i = S.fp.list.indexOf(id), n = S.fp.list.length;
     $('#fpSheet').innerHTML = `
       <div class="fp-head"><img src="${esc(urls[p.face] || '')}" alt="">
         <div><h3>${esc(personLabel(id))}</h3><p>${p.count} photos${teams.length ? ' · seen in ' + teams.map((t) => esc(teamName(t))).join(', ') + ' games' : ''}</p></div>
         <button class="btn x" id="fpClose" aria-label="Close">✕</button></div>
+      ${needsCheck(p) ? `<p class="warn">⚠ ${linked(p) ? `${esc(p.name)} plays for ${esc(teamName(linked(p).team))}, but this face was only seen in ${teams.map((t) => esc(teamName(t))).join(' and ')} games.` : `"${esc(p.name)}" doesn't match one roster player.`} Check the photos, then pick the right player below.</p>` : ''}
       <div class="fp-samples">${photos.map((ph) => sampleCrop(ph, id)).join('')}</div>
       <div class="picks">${picks || '<p class="hint">No team known for this face. Type a name below.</p>'}</div>
       <div class="fp-name"><input id="fpInput" value="${esc(p.name)}" placeholder="Type a name" list="rosterList" maxlength="60" autocomplete="off">
@@ -397,6 +424,7 @@
       <div class="fp-nav">
         <button class="btn" id="fpPrev" ${i <= 0 ? 'disabled' : ''}>← Prev</button>
         <button class="btn" id="fpPhotos">Show their photos</button>
+        <button class="btn" id="fpHide">${isHidden(p) ? 'Undo not a player' : 'Not a player'}</button>
         <span class="grow"></span>
         <span class="hint">${n > 1 ? `${i + 1} / ${n}` : ''}</span>
         <button class="btn" id="fpNext" ${i >= n - 1 ? 'disabled' : ''}>Skip →</button>
@@ -432,6 +460,7 @@
   function fillPeopleList() {
     const seen = new Set(), opts = [];
     S.data.people.forEach((p) => {
+      if (isHidden(p)) return;
       const label = personLabel(p.id);
       if (!seen.has(label.toLowerCase())) { seen.add(label.toLowerCase()); opts.push(label); }
     });
@@ -480,7 +509,7 @@
 
   function cardHtml(p, i) {
     const s = p.scores, on = !!S.star[p.id];
-    const names = [...new Map(p.people.map((id) => [personKey(id), id])).values()];
+    const names = [...new Map(p.people.filter((id) => !isHidden(S.byId[id])).map((id) => [personKey(id), id])).values()];
     return `<div class="card ${on ? 'starred' : ''}" data-id="${esc(p.id)}">
       <button class="open" data-i="${i}" aria-label="${esc(p.name)}, ${LABEL[S.sort]} ${s[S.sort]}">
         <div class="thumb">
@@ -646,6 +675,11 @@
     const pl = e.target.closest('.pl'); if (pl) return nameFromPanel(rosterName(PLAYERS[pl.dataset.player]));
     if (e.target.closest('#fpSave')) return nameFromPanel($('#fpInput').value.trim());
     if (e.target.closest('#fpNext')) return stepFace(1);
+    if (e.target.closest('#fpHide')) { // referee, spectator, photographer…
+      const id = S.fp.id;
+      if (isHidden(S.byId[id])) return nameGroup(id, '').then(() => openFace(id, S.fp?.list));
+      return nameFromPanel(HIDDEN);
+    }
     if (e.target.closest('#fpPrev')) return stepFace(-1);
     if (e.target.closest('#fpPhotos')) {
       S.person = personKey(S.fp.id); closeFace(); closeFaces(); renderPeople(); renderGrid();
