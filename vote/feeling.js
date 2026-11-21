@@ -5,7 +5,7 @@
   const SEASON = cfg.PICKEM_SEASON;
   const $ = (id) => document.getElementById(id);
   const S = {
-    user: null, name: null, season: null, games: [], db: {}, picks: {}, crowd: {}, counts: {},
+    user: null, name: null, season: null, games: [], db: {}, picks: {}, crowd: {}, counts: {}, admin: false,
     round: null, lb: 'season', board: [], seasonBoard: [], pending: null,
   };
   const TZ = 'Asia/Jakarta';
@@ -46,6 +46,7 @@
   async function loadMine() {
     S.picks = S.user ? await api.myPicks(SEASON).catch(() => ({})) : {};
     S.name = S.user ? await api.myPickemName().catch(() => null) : null;
+    S.admin = S.user ? await api.isAdmin().catch(() => false) : false;
   }
   // The split is only sent for games this fan has picked; everyone sees the total.
   async function loadCrowd() {
@@ -92,15 +93,18 @@
 
   function crowdBar(g) {
     const total = S.counts[g.id] || 0, fans = `${total} fan${total === 1 ? '' : 's'}`;
-    if (!S.picks[g.id]) {
+    // Admins see every split (once supabase/pickem.sql is updated); otherwise pick first.
+    const adminSees = S.admin && Object.keys(S.crowd[g.id] || {}).length;
+    if (!S.picks[g.id] && !adminSees) {
       if (locked(g)) return `<div class="pk-crowd empty"><span>🔒 ${total ? `${fans} picked. Only fans who picked this game see the split.` : 'No picks for this game.'}</span></div>`;
       return `<div class="pk-crowd empty locked"><span>🔒 ${total ? `${fans} picked already. ` : ''}Pick a winner to see how fans are picking.</span></div>`;
     }
     const c = S.crowd[g.id] || {}, h = c[g.home] || 0, a = c[g.away] || 0, n = h + a;
-    if (!n) return `<div class="pk-crowd empty"><span>Loading the split…</span></div>`;
+    if (!n) return `<div class="pk-crowd empty"><span>${total ? 'Loading the split…' : 'No picks yet.'}</span></div>`;
     const hp = Math.round((h / n) * 100);
+    const tag = S.admin && !S.picks[g.id] ? ' · admin view' : '';
     return `<div class="pk-crowd"><div class="pk-crowd-bar"><i style="width:${hp}%"></i></div>
-      <span>${hp}%</span><small>${n} fan${n === 1 ? '' : 's'} picked</small><span>${100 - hp}%</span></div>`;
+      <span>${hp}%</span><small>${n} fan${n === 1 ? '' : 's'} picked${tag}</small><span>${100 - hp}%</span></div>`;
   }
 
   function teamBtn(g, side) {

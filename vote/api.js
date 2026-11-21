@@ -299,11 +299,12 @@
         save(state); await delay();
       },
       async clearPick(gameId) { state.pkPicks = (state.pkPicks || []).filter((p) => !(p.game_id === gameId && p.user_id === state.user?.id)); save(state); },
+      // Demo users are admins, so they see every game's split.
       async pickemCrowd(season) {
         if (!state.user) return [];
         const mine = new Set((state.pkPicks || []).filter((p) => p.user_id === state.user.id).map((p) => p.game_id));
         const m = new Map();
-        for (const p of state.pkPicks || []) if (p.game_id.startsWith(season + ':') && mine.has(p.game_id)) { const k = p.game_id + '|' + p.winner; m.set(k, (m.get(k) || 0) + 1); }
+        for (const p of state.pkPicks || []) if (p.game_id.startsWith(season + ':') && (mine.has(p.game_id) || state.user)) { const k = p.game_id + '|' + p.winner; m.set(k, (m.get(k) || 0) + 1); }
         return delay([...m].map(([k, picks]) => { const [game_id, winner] = k.split('|'); return { game_id, winner, picks }; }));
       },
       async pickemCounts(season) {
