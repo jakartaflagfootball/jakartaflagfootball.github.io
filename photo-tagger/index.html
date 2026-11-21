@@ -190,6 +190,48 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .person .sugg:active{transform:scale(.95)}
 .person .sugg:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
+/* all faces view */
+.fv{position:fixed;inset:0;z-index:45;background:var(--bg);overflow-y:auto;overscroll-behavior:contain}
+.fv[hidden],.fp[hidden]{display:none}
+.fv-bar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);padding:var(--s3) var(--s4);
+  background:rgba(15,19,17,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.fv-bar input{flex:1 1 220px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:999px;color:var(--ink);
+  font:500 15px "IBM Plex Sans";padding:8px 14px}
+.fv-bar input:focus{outline:none;border-color:var(--accent)}
+.fv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:var(--s3);padding:var(--s4);max-width:1400px;margin:0 auto}
+.fcard{all:unset;cursor:pointer;position:relative;display:block;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:var(--s3) var(--s1) var(--s2);box-shadow:var(--sh-raised);transition:transform .3s var(--spring)}
+.fcard:hover{transform:translateY(-3px)}
+.fcard:active{transform:scale(.97)}
+.fcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fcard img{width:68px;height:68px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;border:2px solid var(--line);background:var(--raised)}
+.fcard.has-sugg img{border-color:var(--gold)}
+.fcard .nm{display:block;margin-top:var(--s1);font:600 13px/1.3 "IBM Plex Sans";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcard .nm.anon{color:var(--muted);font-weight:500}
+.fcard .sub2{display:block;font:500 11px/1.3 "IBM Plex Sans";color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcard .sub2.gold{color:var(--gold)}
+.fcard .count{position:absolute;top:6px;right:8px;font:500 11px "IBM Plex Mono";color:var(--muted)}
+.fcard.done{opacity:.45}
+.fcard.done::after{content:"✓";position:absolute;top:6px;left:8px;color:var(--ok);font-weight:700}
+/* face panel */
+.fp{position:fixed;inset:0;z-index:55;background:rgba(6,9,7,.75);display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:700px){.fp{align-items:center}}
+.fp-sheet{width:min(620px,100%);max-height:92vh;overflow-y:auto;overscroll-behavior:contain;background:var(--float);border:1px solid var(--line);
+  border-radius:var(--r) var(--r) 0 0;padding:var(--s4);box-shadow:var(--sh-float)}
+@media(min-width:700px){.fp-sheet{border-radius:var(--r)}}
+.fp-head{display:flex;align-items:center;gap:var(--s3)}
+.fp-head img{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--line);flex:none}
+.fp-head h3{margin:0;font:700 20px/1.2 "Barlow Condensed",sans-serif;letter-spacing:-.01em}
+.fp-head p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.fp-head .x{margin-left:auto;align-self:flex-start}
+.fp-samples{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:var(--s3)}
+.fp-samples .crop{width:100%;aspect-ratio:4/3;border-radius:8px;background-color:var(--raised);background-repeat:no-repeat}
+.fp-name{display:flex;gap:var(--s2);margin-top:var(--s3)}
+.fp-name input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 15px "IBM Plex Sans";padding:8px 10px}
+.fp-name input:focus{outline:none;border-color:var(--accent)}
+.fp .picks{max-height:none}
+.fp-nav{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--line)}
+.fp-nav .grow{flex:1}
 .toast{position:fixed;left:50%;bottom:var(--s5);transform:translateX(-50%) translateY(20px);opacity:0;z-index:70;background:var(--float);border:1px solid var(--line);
   padding:var(--s2) var(--s4);border-radius:999px;font-size:13px;box-shadow:var(--sh-float);transition:transform .35s var(--spring),opacity .2s;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -211,9 +253,10 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <div id="app" hidden>
     <section>
       <div class="sec-head">
-        <h2>People</h2>
-        <span class="hint">Tap a face to filter · type a name or tap a <span style="color:var(--gold)">suggested player</span> · same name on two groups merges them</span>
+        <h2 id="peopleHead">Suggested names</h2>
+        <button class="btn primary" id="openFaces">All faces &amp; search</button>
       </div>
+      <p class="hint" style="margin:0 0 var(--s2)">Tap a <span style="color:var(--gold)">gold suggestion</span> to confirm it, or tap a face to see their photos and pick from the roster.</p>
       <div class="people" id="people"></div>
     </section>
 
@@ -237,6 +280,21 @@ select.pick:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <div class="stage" id="stage"></div>
     <aside class="side" id="side"></aside>
   </div>
+</div>
+
+<div class="fv" id="fv" role="dialog" aria-modal="true" aria-label="All faces" hidden>
+  <div class="fv-bar">
+    <button class="btn" id="fvClose">← Photos</button>
+    <input type="search" id="fvSearch" placeholder="Search name, number or team" autocomplete="off" aria-label="Search faces">
+    <div class="seg" id="fvFilter" role="group" aria-label="Show"></div>
+    <span class="count-label" id="fvCount"></span>
+  </div>
+  <div class="fv-grid" id="fvGrid"></div>
+  <div id="fvMore" aria-hidden="true"></div>
+</div>
+
+<div class="fp" id="fp" role="dialog" aria-modal="true" aria-label="Name this face" hidden>
+  <div class="fp-sheet" id="fpSheet"></div>
 </div>
 
 <div class="fix" id="fix" role="dialog" aria-label="Fix face">

@@ -242,7 +242,11 @@
     const el = $('#people');
     const counts = {};
     S.data.photos.forEach((p) => { if (inGame(p)) p.people.forEach((id) => (counts[id] = (counts[id] || 0) + 1)); });
-    const scoped = S.data.people.filter((p) => counts[p.id]).sort((a, b) => (!a.name - !b.name) || counts[b.id] - counts[a.id]);
+    // only faces waiting on a suggested name (plus the one being filtered on); the rest live in All faces
+    const scoped = S.data.people.filter((p) => counts[p.id] && (openSugg(p).length || S.person === personKey(p.id)))
+      .sort((a, b) => (openSugg(b)[0]?.votes || 0) - (openSugg(a)[0]?.votes || 0) || counts[b.id] - counts[a.id]);
+    $('#peopleHead').textContent = `Suggested names (${scoped.length})`;
+    $('#openFaces').textContent = `All faces & search (${S.data.people.length})`;
     const shown = S.allPeople ? scoped : scoped.slice(0, PEOPLE_SHOWN);
     let urls = {};
     try { urls = await api.faceUrls(shown.map((p) => p.face)); } catch (e) { console.warn(e); }
@@ -252,13 +256,13 @@
         <button class="face" aria-label="Show photos of ${esc(personLabel(p.id))}"><img src="${esc(urls[p.face] || '')}" alt="" loading="lazy"></button>
         <input value="${esc(p.name)}" placeholder="Person ${S.num[p.id]}" aria-label="Name for person ${S.num[p.id]}" maxlength="60" list="rosterList">
         ${whoLine(p)}
-      </div>`).join('') || '<div class="hint">No people in this selection.</div>';
+      </div>`).join('') || '<div class="hint">No suggestions waiting here. Open <b>All faces</b> to name the rest.</div>';
     if (scoped.length > PEOPLE_SHOWN)
       el.insertAdjacentHTML('beforeend', `<button class="more-people" id="morePeople">${S.allPeople ? 'Show fewer' : `Show all ${scoped.length}`}</button>`);
     $('#morePeople')?.addEventListener('click', () => { S.allPeople = !S.allPeople; renderPeople(); });
     el.querySelectorAll('.person').forEach((card) => {
       const id = +card.dataset.id;
-      card.querySelector('.face').onclick = () => { const k = personKey(id); S.person = S.person === k ? null : k; renderPeople(); renderGrid(); };
+      card.querySelector('.face').onclick = () => openFace(id, shown.map((q) => q.id));
       const inp = card.querySelector('input');
       inp.onkeydown = (e) => { if (e.key === 'Enter') inp.blur(); if (e.key === 'Escape') { inp.value = S.byId[id].name || ''; inp.blur(); } };
       inp.onblur = async () => {
@@ -278,12 +282,17 @@
       return pl ? `<span class="who">#${esc(pl.number)} · ${esc(teamName(pl.team))}</span>` : '';
     }
     // same number on both teams of a game ties: show both and let the person pick
-    const open = (p.sugg || []).filter((x) => PLAYERS[x.player] && !takenName(rosterName(PLAYERS[x.player])));
-    return open.filter((x) => x.votes === open[0].votes).slice(0, 2).map((s) => {
+    return openSugg(p).slice(0, 2).map((s) => {
       const pl = PLAYERS[s.player];
       return `<button class="sugg" data-player="${esc(pl.id)}" title="Jersey #${esc(pl.number)} read in ${s.votes} photos. Tap to confirm">
-        ${esc(rosterName(pl))} #${esc(pl.number)}<br>${esc(teamName(pl.team))}? ✓</button>`;
+        ${esc(nick(pl))} #${esc(pl.number)}<br>${esc(teamName(pl.team))}? ✓</button>`;
     }).join('');
+  }
+  // suggestions still worth showing: unnamed group, player not already used; ties on votes kept together
+  function openSugg(p) {
+    if (p.name) return [];
+    const open = (p.sugg || []).filter((x) => PLAYERS[x.player] && !takenName(rosterName(PLAYERS[x.player])));
+    return open.filter((x) => x.votes === open[0].votes);
   }
   const takenName = (name) => S.data.people.some((q) => q.name && q.name.toLowerCase() === name.toLowerCase());
 
@@ -294,7 +303,130 @@
     toast(name ? `Named ${name}` : 'Name cleared');
     renderHeader(); renderPeople(); renderGrid();
     if (S.idx >= 0) openLb(S.idx);
+    if (!$('#fv').hidden) updateFaceCard(id);
     return true;
+  }
+
+  // ─── ALL FACES ──────────────────────────────────────────
+  const FV_PAGE = 150;
+  const FV_FILTERS = [['sugg', 'Suggested'], ['unnamed', 'Unnamed'], ['named', 'Named'], ['all', 'All']];
+  S.fv = { filter: 'sugg', q: '', list: [], shown: 0 };
+
+  function faceText(p) { // everything a search can match
+    const bits = [personLabel(p.id), `person ${S.num[p.id]}`, ...(p.teams || []).map(teamName)];
+    const named = p.name && BY_NAME[p.name.toLowerCase()];
+    [...(p.sugg || []).map((x) => PLAYERS[x.player]), named].filter(Boolean)
+      .forEach((pl) => bits.push(pl.full_name, nick(pl), `#${pl.number}#`, teamName(pl.team)));
+    return bits.join(' | ').toLowerCase();
+  }
+  function faceMatches(p) {
+    const f = S.fv.filter;
+    if (f === 'sugg' && !openSugg(p).length) return false;
+    if (f === 'unnamed' && p.name) return false;
+    if (f === 'named' && !p.name) return false;
+    const words = S.fv.q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return true;
+    const t = faceText(p);
+    // a number ("8" or "#8") matches that jersey exactly, not 84 or 88
+    return words.every((w) => (/^#?\d{1,2}$/.test(w) ? t.includes(`#${w.replace('#', '')}#`) : t.includes(w)));
+  }
+  function faceCardInner(p, urls) {
+    const sg = openSugg(p)[0], pl = p.name && BY_NAME[p.name.toLowerCase()];
+    const sub = p.name ? (pl ? `#${pl.number} · ${teamName(pl.team)}` : '') :
+      sg ? `${nick(PLAYERS[sg.player])} #${PLAYERS[sg.player].number}?` : (p.teams || []).map(teamName).join(' / ');
+    return `<span class="count">${p.count}</span><img src="${esc(urls[p.face] || '')}" alt="" loading="lazy">
+      <span class="nm ${p.name ? '' : 'anon'}">${esc(personLabel(p.id))}</span><span class="sub2 ${sg ? 'gold' : ''}">${esc(sub)}</span>`;
+  }
+
+  function openFaces() {
+    $('#fv').hidden = false; document.body.style.overflow = 'hidden';
+    $('#fvFilter').innerHTML = FV_FILTERS.map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === S.fv.filter}">${l}</button>`).join('');
+    renderFaces();
+    if (matchMedia('(hover: hover)').matches) $('#fvSearch').focus();
+  }
+  function closeFaces() { $('#fv').hidden = true; document.body.style.overflow = ''; }
+
+  function renderFaces() {
+    S.fv.list = S.data.people.filter(faceMatches)
+      .sort((a, b) => (openSugg(b)[0]?.votes || 0) - (openSugg(a)[0]?.votes || 0) || b.count - a.count).map((p) => p.id);
+    $('#fvCount').textContent = `${S.fv.list.length} faces`;
+    $('#fvGrid').innerHTML = S.fv.list.length ? '' : '<div class="empty">No faces match.</div>';
+    S.fv.shown = 0; moreFaces();
+  }
+  async function moreFaces() {
+    if (S.fv.shown >= S.fv.list.length) return;
+    const ids = S.fv.list.slice(S.fv.shown, S.fv.shown + FV_PAGE); S.fv.shown += ids.length;
+    let urls = {};
+    try { urls = await api.faceUrls(ids.map((id) => S.byId[id].face)); } catch (e) { console.warn(e); }
+    $('#fvGrid').insertAdjacentHTML('beforeend', ids.map((id) => {
+      const p = S.byId[id];
+      return `<button class="fcard ${openSugg(p).length ? 'has-sugg' : ''}" data-id="${id}" aria-label="${esc(personLabel(id))}">${faceCardInner(p, urls)}</button>`;
+    }).join(''));
+  }
+  new IntersectionObserver((es) => { if (es[0].isIntersecting && !$('#fv').hidden) moreFaces(); }, { root: $('#fv'), rootMargin: '800px' }).observe($('#fvMore'));
+
+  async function updateFaceCard(id) { // keep the grid in place; dim faces that no longer fit the filter
+    const card = $(`.fcard[data-id="${id}"]`); if (!card) return;
+    const p = S.byId[id], urls = await api.faceUrls([p.face]);
+    card.innerHTML = faceCardInner(p, urls);
+    card.classList.toggle('has-sugg', openSugg(p).length > 0);
+    card.classList.toggle('done', !faceMatches(p));
+  }
+
+  // ─── FACE PANEL: confirm or pick a name, then step to the next face ──
+  S.fp = null;
+  async function openFace(id, list) {
+    const p = S.byId[id]; if (!p) return;
+    S.fp = { id, list: list || [id] };
+    const urls = await api.faceUrls([p.face]);
+    const photos = S.data.photos.filter((ph) => ph.people.includes(id)).slice(0, 6); // already best-first
+    const sugg = openSugg(p).map((x) => PLAYERS[x.player]);
+    const teams = p.teams || [];
+    const chip = (pl, sug) => `<button class="pl ${sug ? 'sug' : ''}" data-player="${esc(pl.id)}"><b>#${esc(pl.number)}</b>${esc(nick(pl))}</button>`;
+    let picks = sugg.length ? `<h4>Suggested from jersey number${sugg.length > 1 ? ' (same number on both teams)' : ''}</h4><div class="row-chips">${sugg.map((pl) => chip(pl, true)).join('')}</div>` : '';
+    teams.forEach((t) => { const ps = teamPlayers(t); if (ps.length) picks += `<h4>${esc(teamName(t))}</h4><div class="row-chips">${ps.map((pl) => chip(pl, false)).join('')}</div>`; });
+    const i = S.fp.list.indexOf(id), n = S.fp.list.length;
+    $('#fpSheet').innerHTML = `
+      <div class="fp-head"><img src="${esc(urls[p.face] || '')}" alt="">
+        <div><h3>${esc(personLabel(id))}</h3><p>${p.count} photos${teams.length ? ' · seen in ' + teams.map((t) => esc(teamName(t))).join(', ') + ' games' : ''}</p></div>
+        <button class="btn x" id="fpClose" aria-label="Close">✕</button></div>
+      <div class="fp-samples">${photos.map((ph) => sampleCrop(ph, id)).join('')}</div>
+      <div class="picks">${picks || '<p class="hint">No team known for this face. Type a name below.</p>'}</div>
+      <div class="fp-name"><input id="fpInput" value="${esc(p.name)}" placeholder="Type a name" list="rosterList" maxlength="60" autocomplete="off">
+        <button class="btn primary" id="fpSave">Save</button></div>
+      <div class="fp-nav">
+        <button class="btn" id="fpPrev" ${i <= 0 ? 'disabled' : ''}>← Prev</button>
+        <button class="btn" id="fpPhotos">Show their photos</button>
+        <span class="grow"></span>
+        <span class="hint">${n > 1 ? `${i + 1} / ${n}` : ''}</span>
+        <button class="btn" id="fpNext" ${i >= n - 1 ? 'disabled' : ''}>Skip →</button>
+      </div>`;
+    $('#fp').hidden = false; document.body.style.overflow = 'hidden';
+    $('#fpSheet').scrollTop = 0;
+  }
+  // A sample photo zoomed on this person: face plus the jersey below it (4:3 tile).
+  function sampleCrop(ph, id) {
+    const f = ph.faces.find((x) => x.person === id);
+    const url = driveImg(ph.id, f ? 800 : 320);
+    if (!f) return `<div class="crop" style="background-image:url('${url}');background-size:cover;background-position:center"></div>`;
+    const [x1, y1, x2, y2] = f.bbox, fw = x2 - x1, fh = y2 - y1;
+    let cw = Math.min(ph.w, Math.max(fw * 5.5, ph.w * 0.14)), ch = cw * 0.75;
+    if (ch > ph.h) { ch = ph.h; cw = ch / 0.75; }
+    const cx = Math.max(0, Math.min(ph.w - cw, (x1 + x2) / 2 - cw / 2));
+    const cy = Math.max(0, Math.min(ph.h - ch, y1 - fh * 0.7));
+    const pos = (c, size, full) => (full - size <= 0 ? 0 : (c / (full - size)) * 100);
+    return `<div class="crop" style="background-image:url('${url}');background-size:${(ph.w / cw) * 100}% ${(ph.h / ch) * 100}%;background-position:${pos(cx, cw, ph.w)}% ${pos(cy, ch, ph.h)}%"></div>`;
+  }
+
+  function closeFace() { $('#fp').hidden = true; S.fp = null; if ($('#fv').hidden) document.body.style.overflow = ''; }
+  function stepFace(d) {
+    if (!S.fp) return;
+    const next = S.fp.list[S.fp.list.indexOf(S.fp.id) + d];
+    if (next != null) openFace(next, S.fp.list); else closeFace();
+  }
+  async function nameFromPanel(name) {
+    if (!S.fp || !name) return;
+    if (await nameGroup(S.fp.id, name)) stepFace(1); // straight on to the next face
   }
 
   function fillPeopleList() {
@@ -503,11 +635,38 @@
   $('#fixNone').onclick = () => saveFix(null);
   $('#fixCancel').onclick = closeFix;
   $('#lbClose').onclick = closeLb;
+  $('#openFaces').onclick = openFaces;
+  $('#fvClose').onclick = closeFaces;
+  $('#fvFilter').onclick = (e) => { const k = e.target.dataset.k; if (!k) return; S.fv.filter = k;
+    $('#fvFilter').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === k)); renderFaces(); };
+  let fvT; $('#fvSearch').oninput = (e) => { clearTimeout(fvT); fvT = setTimeout(() => { S.fv.q = e.target.value; renderFaces(); }, 150); };
+  $('#fvGrid').addEventListener('click', (e) => { const c = e.target.closest('.fcard'); if (c) openFace(+c.dataset.id, S.fv.list); });
+  $('#fp').addEventListener('click', (e) => {
+    if (e.target.id === 'fp' || e.target.closest('#fpClose')) return closeFace();
+    const pl = e.target.closest('.pl'); if (pl) return nameFromPanel(rosterName(PLAYERS[pl.dataset.player]));
+    if (e.target.closest('#fpSave')) return nameFromPanel($('#fpInput').value.trim());
+    if (e.target.closest('#fpNext')) return stepFace(1);
+    if (e.target.closest('#fpPrev')) return stepFace(-1);
+    if (e.target.closest('#fpPhotos')) {
+      S.person = personKey(S.fp.id); closeFace(); closeFaces(); renderPeople(); renderGrid();
+      $('.toolbar').scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+  $('#fp').addEventListener('keydown', (e) => { if (e.target.id === 'fpInput' && e.key === 'Enter') nameFromPanel(e.target.value.trim()); });
   $('#lb').addEventListener('click', (e) => { if (e.target.id === 'lb' || e.target.classList.contains('lb-inner')) closeLb(); });
   $('#bestOnly').onclick = () => { if (S.person || S.starOnly) return; S.bestOnly = !S.bestOnly; renderGrid(); };
   $('#starOnly').onclick = () => { S.starOnly = !S.starOnly; renderGrid(); };
   $('#filterTag').onclick = () => { S.person = null; renderPeople(); renderGrid(); };
   document.addEventListener('keydown', (e) => {
+    if (S.fp && !e.target.matches('input')) { // face panel: arrows step, 1-2 pick a suggestion, Esc closes
+      if (e.key === 'Escape') closeFace();
+      if (e.key === 'ArrowRight') stepFace(1);
+      if (e.key === 'ArrowLeft') stepFace(-1);
+      const sg = openSugg(S.byId[S.fp.id])[+e.key - 1];
+      if (sg) nameFromPanel(rosterName(PLAYERS[sg.player]));
+      return;
+    }
+    if (!$('#fv').hidden && S.idx < 0) { if (e.key === 'Escape' && !e.target.matches('input')) closeFaces(); return; }
     if (S.idx < 0 || S.fixing || e.target.matches('input')) return;
     if (e.key === 'Escape') closeLb();
     if (e.key === 'ArrowLeft') openLb(Math.max(0, S.idx - 1));
