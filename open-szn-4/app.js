@@ -297,14 +297,63 @@
       (teamFilter && !days.has('Playoff Day') && !poolDone(div) ? '<p class="empty-note">Playoff Day games appear here once seeds are set after Week 3.</p>' : '');
   }
 
-  function bracketCard(g, projected) {
+  // For a "W:GAME" / "L:GAME" slot that isn't decided yet: the two teams who could fill it
+  // ("Basilisk / Oozma Kappa"), or null if that game's own teams aren't known either.
+  function slotCandidates(slot, d, projected) {
+    const m = slot.match(/^[WL]:(.+)$/);
+    const g = m && S.games.find((x) => x.id === m[1]);
+    if (!g) return null;
+    const h = g.home || resolve(g.homeSlot, d, projected), a = g.away || resolve(g.awaySlot, d, projected);
+    return h && a ? `${name(h)} / ${name(a)}` : null;
+  }
+
+  function bracketCard(g, projected, compact) {
     const row = (s) => {
-      const id = g[s] || resolve(g[s + 'Slot'], g.division, projected);
+      const slot = g[s + 'Slot'];
+      const id = g[s] || resolve(slot, g.division, projected);
       // A "#n" slot is a bracket position; label it with the team's real seed.
-      const tag = id && /^#\d$/.test(g[s + 'Slot']) ? `#${menSeedNo(id)}` : g[s + 'Slot'].replace(/^W:|^L:/, (m) => (m === 'W:' ? 'W ' : 'L '));
-      return `<div class="bm-row"><span class="seed">${esc(tag)}</span>${logo(id)}<span class="nm ${id ? '' : 'tbd'}">${esc(id ? name(id) : slotText(g[s + 'Slot']))}</span>${played(g) ? `<span class="sc">${g[s === 'home' ? 'homeScore' : 'awayScore']}</span>` : ''}</div>`;
+      const tag = id && /^#\d$/.test(slot) ? `#${menSeedNo(id)}` : slot.replace(/^W:|^L:/, (m) => (m === 'W:' ? 'W ' : 'L '));
+      const label = id ? name(id) : slotCandidates(slot, g.division, projected) || slotText(slot);
+      return `<div class="bm-row"><span class="seed">${esc(tag)}</span>${logo(id)}<span class="nm ${id ? '' : 'tbd'}" title="${esc(label)}">${esc(label)}</span>${played(g) ? `<span class="sc">${g[s === 'home' ? 'homeScore' : 'awayScore']}</span>` : ''}</div>`;
     };
-    return `<a class="bm" href="#match-${esc(g.id)}"><div class="bm-head"><b>${esc(g.id)}</b><span>${esc(g.round)} · ${esc(g.time)} · ${esc(g.field)}</span></div>${row('home')}${row('away')}</a>`;
+    const meta = compact ? `${g.time} · ${g.field}` : `${g.round} · ${g.time} · ${g.field}`;
+    return `<a class="bm" href="#match-${esc(g.id)}"><div class="bm-head"><b>${esc(g.id)}</b><span>${esc(meta)}</span></div>${row('home')}${row('away')}</a>`;
+  }
+
+  // ─── Bracket trees ───────────────────────────────────
+  // Each final (1st, 5th, 9th place) with every game that feeds it, one column per round, plus
+  // the placement game played by that final's semifinal losers (3rd, 7th, 11th place).
+  const feeders = (g) => ['homeSlot', 'awaySlot'].map((s) => (g[s] || '').match(/^W:(.+)$/)).filter(Boolean).map((m) => S.games.find((x) => x.id === m[1])).filter(Boolean);
+  function treeCols(fin) {
+    const cols = [];
+    for (let level = [fin]; level.length; level = level.flatMap(feeders)) cols.unshift(level);
+    return cols;
+  }
+  function bracketTrees(d) {
+    const po = S.games.filter((x) => x.division === d && x.stage === 'playoff');
+    const place = (g) => parseInt(g.decides, 10) || 99;
+    const finals = po.filter((x) => x.decides && /^W:/.test(x.homeSlot)).sort((a, b) => place(a) - place(b));
+    return finals.map((fin) => {
+      const cols = treeCols(fin);
+      const semis = cols.length > 1 ? cols[cols.length - 2].map((x) => 'L:' + x.id) : [];
+      const extra = po.filter((x) => semis.includes(x.homeSlot) && semis.includes(x.awaySlot));
+      const p = place(fin);
+      const title = p === 1 ? (isMen(d) ? 'Playoffs bracket' : 'Championship') : `Places ${p}–${p + 3}`;
+      return { title, cols, extra };
+    });
+  }
+  function roundName(col) {
+    const r = col[0].round;
+    return col.length > 1 && !/s$/.test(r) ? `${r}s` : r;
+  }
+  function treeHtml(t, projected) {
+    return `<div class="group-label">${esc(t.title)}</div>
+      <div class="tree" style="--cols:${t.cols.length}">${t.cols.map((col, i) => {
+        const last = i === t.cols.length - 1;
+        return `<div class="tree-col ${i ? 'fed' : ''} ${last ? 'last' : ''}"><div class="round-label">${esc(roundName(col))}</div>
+          <div class="tree-games">${last ? '<div class="tree-pad"></div>' : ''}${col.map((g) => `<div class="tree-slot">${bracketCard(g, projected, true)}</div>`).join('')}
+          ${last ? `<div class="tree-extra">${t.extra.map((g) => `<div class="round-label">${esc(g.round)}</div>${bracketCard(g, projected, true)}`).join('')}</div>` : ''}</div></div>`;
+      }).join('')}</div>`;
   }
 
   function viewPlayoffs() {
@@ -324,17 +373,10 @@
     }
     if (men) html += `<section class="blk">${wildcardTable()}</section>`;
     html += playoffPicture(done);
-    const po =S.games.filter((x) => x.division === div && x.stage === 'playoff');
-    const groupsOrder = men ? ['Playoffs', 'Places 9–12'] : ['Championship'];
     html += `<section class="blk"><div class="blk-head"><h2 class="blk-title">${done ? 'Playoff Day' : 'If it ended today'}</h2><span class="blk-sub">Sat 5 Dec · ${esc(S.venue)}</span></div>
-      ${done ? '' : '<p class="explain">Projected from the current standings, including the no-rematch rule for the quarterfinals. Seeds are set after Week 3.</p>'}
-      ${groupsOrder.map((b) => {
-        // Before seeds are set, show only the opening games; later rounds are all "Winner of…".
-        const gs = po.filter((x) => x.bracket === b && (done || !/^[WL]:/.test(x.homeSlot)));
-        const rounds = [...new Set(gs.map((x) => x.round))];
-        return `<div class="group-label">${esc(b === 'Playoffs' ? 'Playoffs bracket · places 1–8' : b === 'Places 9–12' ? 'Places 9–12' : 'Semifinals')}</div>
-          ${rounds.map((r) => `<div class="round-label">${esc(r)}</div><div class="bracket">${gs.filter((x) => x.round === r).sort((a, b) => a.id.localeCompare(b.id)).map((g) => bracketCard(g, true)).join('')}</div>`).join('')}`;
-      }).join('')}
+      ${done ? '' : `<p class="explain">Projected from the current standings, including the no-rematch rule for the quarterfinals. Seeds are set after Week 3.${men ? ' Quarterfinal losers drop into the Places 5–8 bracket.' : ''}</p>`}
+      <p class="tree-hint">Swipe sideways to follow each bracket to its final.</p>
+      ${bracketTrees(div).map((t) => treeHtml(t, true)).join('')}
       ${done ? '' : `<p class="tiebreak"><a class="blk-link" href="#${hashFor('games')}">Full Playoff Day schedule →</a></p>`}</section>`;
     return html;
   }
