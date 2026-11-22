@@ -279,15 +279,22 @@ a.bm:hover { border-color: var(--accent); }
 
 /* Bracket tree: one column per round; scrolls sideways inside its own box on phones */
 .tree {
-  display: grid; grid-template-columns: repeat(var(--cols), minmax(212px, 1fr)); gap: 0 1.5rem;
+  --line: rgba(201,168,76,.55); --stub: 1rem;  /* connector colour; half the gap between rounds */
+  display: grid; grid-template-columns: repeat(var(--cols), minmax(212px, 1fr)); gap: 0 calc(var(--stub) * 2);
   overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: .5rem; margin-bottom: 1.75rem;
   scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
 .tree-col { display: flex; flex-direction: column; min-width: 0; scroll-snap-align: start; }
-.tree-col > .round-label { margin-top: 0; }
-.tree-games { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: .75rem; }
-.tree-slot { position: relative; }
-.tree-col.fed .tree-slot::before { content: ""; position: absolute; left: -1.5rem; top: 50%; width: 1.5rem; border-top: 1px solid var(--border); }
+.tree-col > .round-label { margin-top: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree-games { flex: 1; display: flex; flex-direction: column; }
+/* Each pair takes an equal share of the column; with equal-height cards and no gap, their
+   centres land at 25% and 75% of the pair, which is where the joining line starts and ends. */
+.tree-pair { flex: 1; display: flex; flex-direction: column; justify-content: space-around; position: relative; }
+.tree-slot { position: relative; padding: .4rem 0; }
+/* Connectors: a stub out of each game, a bar joining the pair, a stub into the next game. */
+.tree-col:not(.last) .tree-slot::after { content: ""; position: absolute; right: calc(var(--stub) * -1); top: 50%; width: var(--stub); border-top: 2px solid var(--line); margin-top: -1px; }
+.tree-pair.two::after { content: ""; position: absolute; right: calc(var(--stub) * -1); top: 25%; bottom: 25%; border-right: 2px solid var(--line); margin: -1px -1px -1px 0; }
+.tree-col.fed .tree-slot::before { content: ""; position: absolute; left: calc(var(--stub) * -1); top: 50%; width: var(--stub); border-top: 2px solid var(--line); margin-top: -1px; }
 /* Last column: equal empty rows above and below keep the final level with the middle of the
    bracket; the 3rd/7th/11th place game hangs underneath it. */
 .tree-col.last .tree-games { display: grid; grid-template-rows: 1fr auto 1fr; gap: 0; }

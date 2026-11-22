@@ -350,9 +350,15 @@
     return `<div class="group-label">${esc(t.title)}</div>
       <div class="tree" style="--cols:${t.cols.length}">${t.cols.map((col, i) => {
         const last = i === t.cols.length - 1;
-        return `<div class="tree-col ${i ? 'fed' : ''} ${last ? 'last' : ''}"><div class="round-label">${esc(roundName(col))}</div>
-          <div class="tree-games">${last ? '<div class="tree-pad"></div>' : ''}${col.map((g) => `<div class="tree-slot">${bracketCard(g, projected, true)}</div>`).join('')}
-          ${last ? `<div class="tree-extra">${t.extra.map((g) => `<div class="round-label">${esc(g.round)}</div>${bracketCard(g, projected, true)}`).join('')}</div>` : ''}</div></div>`;
+        const slot = (g) => `<div class="tree-slot">${bracketCard(g, projected, true)}</div>`;
+        // Games that feed the same next-round game sit in one .tree-pair, which draws the bracket
+        // line joining them (feeders are listed consecutively, so pairs are 0–1, 2–3, …).
+        const pairs = [];
+        for (let k = 0; k < col.length; k += 2) pairs.push(col.slice(k, k + 2));
+        const body = last
+          ? `<div class="tree-pad"></div>${col.map(slot).join('')}<div class="tree-extra">${t.extra.map((g) => `<div class="round-label">${esc(g.round)}</div>${bracketCard(g, projected, true)}`).join('')}</div>`
+          : pairs.map((p) => `<div class="tree-pair ${p.length === 2 ? 'two' : ''}">${p.map(slot).join('')}</div>`).join('');
+        return `<div class="tree-col ${i ? 'fed' : ''} ${last ? 'last' : ''}"><div class="round-label">${esc(roundName(col))}</div><div class="tree-games">${body}</div></div>`;
       }).join('')}</div>`;
   }
 
