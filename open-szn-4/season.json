@@ -1,7 +1,7 @@
 {
  "name": "Open SZN IV",
  "sample": false,
- "updated": "2026-11-17T12:00:00+07:00",
+ "updated": "2026-11-22T17:00:00+07:00",
  "venue": "DM Sport Tangerang",
  "livestream": "Field 2",
  "points": {
@@ -326,8 +326,8 @@
    "field": "Field 1",
    "home": "aozora",
    "away": "oil-city",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 7,
+   "awayScore": 36
   },
   {
    "id": "w3-21",
@@ -340,8 +340,8 @@
    "field": "Field 2",
    "home": "city-boys-club",
    "away": "tropics",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 31,
+   "awayScore": 12
   },
   {
    "id": "w3-22",
@@ -354,8 +354,8 @@
    "field": "Field 3",
    "home": "orion",
    "away": "warwolves",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 7,
+   "awayScore": 20
   },
   {
    "id": "w3-23",
@@ -368,8 +368,8 @@
    "field": "Field 2",
    "home": "griffins",
    "away": "gorgons",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 6,
+   "awayScore": 44
   },
   {
    "id": "w3-24",
@@ -382,8 +382,8 @@
    "field": "Field 1",
    "home": "unc",
    "away": "eagles",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 14,
+   "awayScore": 18
   },
   {
    "id": "w3-25",
@@ -396,8 +396,8 @@
    "field": "Field 3",
    "home": "aozora-shiragumo",
    "away": "oozma-kappa",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 7,
+   "awayScore": 40
   },
   {
    "id": "w3-26",
@@ -410,8 +410,8 @@
    "field": "Field 1",
    "home": "warwolves",
    "away": "orcas",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 34,
+   "awayScore": 0
   },
   {
    "id": "w3-27",
@@ -424,8 +424,8 @@
    "field": "Field 2",
    "home": "cygnus",
    "away": "basilisk",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 21,
+   "awayScore": 18
   },
   {
    "id": "w3-28",
@@ -438,8 +438,8 @@
    "field": "Field 3",
    "home": "boars",
    "away": "spectres",
-   "homeScore": null,
-   "awayScore": null
+   "homeScore": 32,
+   "awayScore": 20
   },
   {
    "id": "MQF2",
