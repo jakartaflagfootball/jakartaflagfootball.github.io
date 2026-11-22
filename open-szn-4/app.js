@@ -75,27 +75,18 @@
 
   // ─── Seeding (guidebook) ─────────────────────────────
   // Men: #1–#3 pool winners, #4–#6 runners-up, #7–#8 the two best 3rd-place teams.
-  // No pool rematches in the quarterfinals: #7 and #8 (or #5 and #6) trade opponents. Seeds
-  // themselves stay in merit order; only the pairing changes.
-  // `seeds` is the merit order (seed n = seeds[n-1]). `slots` is the bracket order that the
-  // "#n" slots in season.json resolve to (1v8, 2v7, 3v6, 4v5 by position).
+  // Quarterfinals are strictly 1v8, 2v7, 3v6, 4v5, even when that's a pool rematch (JFF
+  // decision, 22 Nov 2026; the guidebook's no-rematch swap is not applied).
+  // `seeds` is the merit order (seed n = seeds[n-1]); `slots` is what the "#n" slots in
+  // season.json resolve to, which is the same list now that nothing is swapped.
   function menSeeds() {
     const firsts = byFinish('men', 1), seconds = byFinish('men', 2), thirds = byFinish('men', 3), fourths = byFinish('men', 4);
     const seeds = [...firsts, ...seconds, ...thirds.slice(0, 2)];
-    let slots = [...seeds];
-    const qf = [[0, 7], [1, 6], [2, 5], [3, 4]];
-    const clashing = (s, pairs) => pairs.map(([a, b]) => [s[a], s[b]]).find(([x, y]) => x && y && x.pool === y.pool);
-    const swaps = [];
-    for (const [pairs, i, j] of [[[qf[0], qf[1]], 6, 7], [[qf[2], qf[3]], 4, 5]]) {
-      const c = clashing(slots, pairs);
-      if (!c) continue;
-      const s = [...slots]; [s[i], s[j]] = [s[j], s[i]]; slots = s;
-      swaps.push({ seeds: [i + 1, j + 1], teams: [c[0].id, c[1].id], pool: c[0].pool });
-    }
+    const slots = seeds;
     const opp = {};
-    qf.forEach(([a, b]) => { if (slots[a] && slots[b]) { opp[slots[a].id] = slots[b].id; opp[slots[b].id] = slots[a].id; } });
+    [[0, 7], [1, 6], [2, 5], [3, 4]].forEach(([a, b]) => { if (slots[a] && slots[b]) { opp[slots[a].id] = slots[b].id; opp[slots[b].id] = slots[a].id; } });
     const tier2 = [thirds[2], ...fourths].filter(Boolean);
-    return { seeds, slots, opp, tier2, thirds, swaps };
+    return { seeds, slots, opp, tier2, thirds };
   }
   const menSeedNo = (id) => menSeeds().seeds.findIndex((r) => r.id === id) + 1;
   function womenSeeds() { return table('women', 'A').slice(0, 4); }
@@ -240,15 +231,14 @@
       return `<section class="blk">${head}${seedTable(seedRows(s, (i) => 3 - i, (r) => `${ord(r.rank)} in the pool`, 'vs'), 'Semi')}
         <p class="tiebreak">Semifinals: #1 v #4, #2 v #3.</p></section>`;
     }
-    const { seeds, opp, tier2, swaps } = menSeeds();
+    const { seeds, opp, tier2 } = menSeeds();
     const finish = ['winner', 'runner-up', '3rd · wildcard'];
     const how = (r) => `Pool ${r.pool} ${finish[r.rank - 1]}`;
     const oppIdx = (i) => seeds.findIndex((r) => r.id === opp[seeds[i].id]);
-    const notes = swaps.map((w) => `#${w.seeds[0]} and #${w.seeds[1]} trade opponents so ${name(w.teams[0])} and ${name(w.teams[1])} (both Pool ${w.pool}) don't meet again.`);
     const mtHow = (r, i) => (i === 0 ? `Pool ${r.pool} 3rd · missed wildcard` : `Pool ${r.pool} 4th`);
     return `<section class="blk">${head}
       ${seedTable(seedRows(seeds, oppIdx, how, 'vs'), 'QF')}
-      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, fewest points allowed, most points scored. Quarterfinals: 1v8, 2v7, 3v6, 4v5, unless that's a pool rematch.${notes.length ? ' ' + esc(notes.join(' ')) : ''}</p>
+      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, fewest points allowed, most points scored. Quarterfinals: 1v8, 2v7, 3v6, 4v5.</p>
       <div class="group-label" style="margin-top:1.5rem">Places 9–12</div>
       ${seedTable(seedRows(tier2, (i) => 3 - i, mtHow, 'vs MT'), 'Semi')}
       <p class="tiebreak">MT #1 is the 3rd-place team that missed the wildcard, MT #2–4 the 4th-place teams. Semifinals: MT1 v MT4, MT2 v MT3.</p>
@@ -380,7 +370,7 @@
     if (men) html += `<section class="blk">${wildcardTable()}</section>`;
     html += playoffPicture(done);
     html += `<section class="blk"><div class="blk-head"><h2 class="blk-title">${done ? 'Playoff Day' : 'If it ended today'}</h2><span class="blk-sub">Sat 5 Dec · ${esc(S.venue)}</span></div>
-      ${done ? '' : `<p class="explain">Projected from the current standings, including the no-rematch rule for the quarterfinals. Seeds are set after Week 3.${men ? ' Quarterfinal losers drop into the Places 5–8 bracket.' : ''}</p>`}
+      ${done ? '' : `<p class="explain">Projected from the current standings: quarterfinals are 1v8, 2v7, 3v6, 4v5. Seeds are set after Week 3.${men ? ' Quarterfinal losers drop into the Places 5–8 bracket.' : ''}</p>`}
       <p class="tree-hint">Swipe sideways to follow each bracket to its final.</p>
       ${bracketTrees(div).map((t) => treeHtml(t, true)).join('')}
       ${done ? '' : `<p class="tiebreak"><a class="blk-link" href="#${hashFor('games')}">Full Playoff Day schedule →</a></p>`}</section>`;
