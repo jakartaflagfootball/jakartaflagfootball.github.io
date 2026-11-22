@@ -51,7 +51,7 @@
   }
 
   // Inside a pool: points, then head-to-head among the tied teams (a mini-table when three or
-  // more are tied), then point difference, fewest points allowed, most points scored.
+  // more are tied), then point difference, most points scored, fewest points allowed.
   function table(d, p) {
     const games = poolGames(d, p);
     const rows = rowsFrom(pools(d)[p], games, S.points);
@@ -64,13 +64,13 @@
       const mini = rowsFrom(ids, games.filter((x) => ids.includes(x.home) && ids.includes(x.away)), S.points);
       tied.forEach((r) => { r.h2h = mini[r.id].pts; });
     }
-    list.sort((a, b) => b.pts - a.pts || (b.h2h || 0) - (a.h2h || 0) || b.pd - a.pd || a.pa - b.pa || b.pf - a.pf || name(a.id).localeCompare(name(b.id)));
+    list.sort((a, b) => b.pts - a.pts || (b.h2h || 0) - (a.h2h || 0) || b.pd - a.pd || b.pf - a.pf || a.pa - b.pa || name(a.id).localeCompare(name(b.id)));
     list.forEach((r, i) => { r.rank = i + 1; r.pool = p; });
     return list;
   }
 
-  // Across pools (no head-to-head): points, point difference, fewest allowed, most scored.
-  const crossSort = (a, b) => b.pts - a.pts || b.pd - a.pd || a.pa - b.pa || b.pf - a.pf || name(a.id).localeCompare(name(b.id));
+  // Across pools (no head-to-head): points, point difference, most scored, fewest allowed.
+  const crossSort = (a, b) => b.pts - a.pts || b.pd - a.pd || b.pf - a.pf || a.pa - b.pa || name(a.id).localeCompare(name(b.id));
   function byFinish(d, n) { return Object.keys(pools(d)).map((p) => table(d, p)[n - 1]).filter(Boolean).sort(crossSort); }
 
   // ─── Seeding (guidebook) ─────────────────────────────
@@ -206,9 +206,9 @@
   function wildcardTable() {
     const t = byFinish('men', 3);
     return `<div class="blk-head"><h2 class="blk-title">3rd-place race</h2><span class="blk-sub">Best 2 become wildcards</span></div>
-      <div class="tbl-wrap"><table class="st"><thead><tr><th scope="col" style="text-align:center">#</th><th scope="col">Team</th><th scope="col">Pts</th><th scope="col">PD</th><th scope="col">PA</th><th scope="col">PF</th></tr></thead>
-      <tbody>${t.map((r, i) => `<tr class="${i === 1 ? 'cut' : ''}" data-team="${esc(r.id)}"><td class="rk">${i + 1}</td><td class="tm"><a href="#team-${esc(r.id)}">${logo(r.id)}<span>${esc(name(r.id))} <span class="pool-tag">${esc(r.pool)}3</span></span></a></td><td class="pts">${r.pts}</td><td class="pd">${r.pd > 0 ? '+' : ''}${r.pd}</td><td>${r.pa}</td><td>${r.pf}</td></tr>`).join('')}</tbody></table></div>
-      <p class="tiebreak">3rd-place teams never meet, so they're compared on points, then point difference, fewest points allowed, most points scored, then a coin toss.</p>`;
+      <div class="tbl-wrap"><table class="st"><thead><tr><th scope="col" style="text-align:center">#</th><th scope="col">Team</th><th scope="col">Pts</th><th scope="col">PD</th><th scope="col">PF</th><th scope="col">PA</th></tr></thead>
+      <tbody>${t.map((r, i) => `<tr class="${i === 1 ? 'cut' : ''}" data-team="${esc(r.id)}"><td class="rk">${i + 1}</td><td class="tm"><a href="#team-${esc(r.id)}">${logo(r.id)}<span>${esc(name(r.id))} <span class="pool-tag">${esc(r.pool)}3</span></span></a></td><td class="pts">${r.pts}</td><td class="pd">${r.pd > 0 ? '+' : ''}${r.pd}</td><td>${r.pf}</td><td>${r.pa}</td></tr>`).join('')}</tbody></table></div>
+      <p class="tiebreak">3rd-place teams never meet, so they're compared on points, then point difference, most points scored, fewest points allowed, then a coin toss.</p>`;
   }
 
   // Seeds 1–8 (men) or 1–4 (women), how each got there, and who they open against.
@@ -238,7 +238,7 @@
     const mtHow = (r, i) => (i === 0 ? `Pool ${r.pool} 3rd · missed wildcard` : `Pool ${r.pool} 4th`);
     return `<section class="blk">${head}
       ${seedTable(seedRows(seeds, oppIdx, how, 'vs'), 'QF')}
-      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, fewest points allowed, most points scored. Quarterfinals: 1v8, 2v7, 3v6, 4v5.</p>
+      <p class="tiebreak">Seeds #1–3 are the pool winners, #4–6 the runners-up, #7–8 the two best 3rd-place teams. Each group is ranked by points, point difference, most points scored, fewest points allowed. Quarterfinals: 1v8, 2v7, 3v6, 4v5.</p>
       <div class="group-label" style="margin-top:1.5rem">Places 9–12</div>
       ${seedTable(seedRows(tier2, (i) => 3 - i, mtHow, 'vs MT'), 'Semi')}
       <p class="tiebreak">MT #1 is the 3rd-place team that missed the wildcard, MT #2–4 the 4th-place teams. Semifinals: MT1 v MT4, MT2 v MT3.</p>
@@ -272,7 +272,7 @@
       `<div class="legend">${men
         ? '<span><i class="line"></i> Top 2: Playoffs bracket</span><span><i class="line gold"></i> 3rd: wildcard race</span><span><span class="mark x">x</span> Clinched top 2</span><span><span class="mark e">e</span> Plays for 9–12</span>'
         : '<span><i class="line"></i> Top 4: semifinals</span><span><span class="mark x">x</span> Clinched</span><span><span class="mark e">e</span> Eliminated</span>'}</div>
-      <p class="tiebreak">Win 3 pts · Tie 1 · Loss 0. Ties inside a pool: head-to-head (a mini-table if three or more are tied), then point difference, fewest points allowed, most points scored, coin toss.</p>
+      <p class="tiebreak">Win 3 pts · Tie 1 · Loss 0. Ties inside a pool: head-to-head (a mini-table if three or more are tied), then point difference, most points scored, fewest points allowed, coin toss.</p>
       ${men ? `<section class="blk" style="margin-top:2rem">${wildcardTable()}</section>` : ''}`;
   }
 
