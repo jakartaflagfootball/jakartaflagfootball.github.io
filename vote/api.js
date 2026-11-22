@@ -181,7 +181,27 @@
         ok(await sb.from('pickem_players').upsert({ user_id: user.id, display_name: name.trim() }, { onConflict: 'user_id' }));
       },
       // Admin: copy games and results from season.json (rows from JFF.pickemRows). Never deletes.
-      async syncPickemGames(rows) { ok(await sb.from('pickem_games').upsert(rows, { onConflict: 'id' })); return rows.length; },
+      async syncPickemGames(rows) {
+        let { error } = await sb.from('pickem_games').upsert(rows, { onConflict: 'id' });
+        // Before supabase/bracket.sql is run the playoff columns don't exist yet: sync without them.
+        if (error && /bracket|round|home_slot|away_slot|column/i.test(error.message || '')) {
+          ({ error } = await sb.from('pickem_games').upsert(rows.map(({ bracket, round, home_slot, away_slot, ...r }) => r), { onConflict: 'id' }));
+        }
+        if (error) throw error;
+        return rows.length;
+      },
+      // ─── Bracket challenge (see supabase/bracket.sql) ───
+      async myBracket(season) {
+        const user = await this.getUser(); if (!user) return {};
+        return (await sb.from('pickem_brackets').select('picks').eq('user_id', user.id).eq('season', season).maybeSingle()).data?.picks || {};
+      },
+      async saveBracket(season, picks) {
+        const { error } = await sb.rpc('pickem_save_bracket', { s: season, picks });
+        if (error) throw new Error(error.message || 'Bracket not saved');
+      },
+      async bracketLeaderboard(season) { return ok(await sb.rpc('pickem_bracket_leaderboard', { s: season })); },
+      async bracketCount(season) { return +ok(await sb.rpc('pickem_bracket_count', { s: season })) || 0; },
+      async bracketChampions(season) { if (!(await this.getUser())) return []; return ok(await sb.rpc('pickem_bracket_champions', { s: season })); },
     };
   }
 
@@ -345,7 +365,60 @@
             }
           });
         }
+        // Fake brackets, once the first playoff round's teams are known.
+        const season = rows[0]?.season;
+        if (season && !state.brackets?.[season] && rows.some((r) => JFF.inBracket(r) && r.home)) {
+          const brackets = ((state.brackets ||= {})[season] = {});
+          const order = rows.filter(JFF.inBracket).sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+          Object.keys(state.pkNames).filter((u) => u.startsWith('fan-')).slice(0, 11).forEach((u) => {
+            const picks = {};
+            for (const g of order) {
+              const short = g.id.split(':')[1], [h, a] = JFF.bracketTeams(state.pkGames, season, picks, short);
+              if (h && a) picks[short] = Math.random() < 0.6 ? h : a;
+            }
+            brackets[u] = picks;
+          });
+        }
         save(state); return rows.length;
+      },
+      // ─── Bracket challenge (demo) ───
+      async myBracket(season) { return { ...(state.brackets?.[season]?.[state.user?.id] || {}) }; },
+      async saveBracket(season, picks) {
+        if (!state.user) throw new Error('Please sign in first.');
+        const games = Object.values(state.pkGames || {}).filter((g) => g.season === season && JFF.inBracket(g));
+        if (!games.length) throw new Error('Brackets are not open yet.');
+        if (Date.now() >= Math.min(...games.map((g) => +new Date(g.kickoff)))) throw new Error('Brackets are locked: the playoffs have started.');
+        for (const [k, v] of Object.entries(picks)) {
+          const [h, a] = JFF.bracketTeams(state.pkGames, season, picks, k);
+          if (v !== h && v !== a) throw new Error(`Pick for ${k} does not match your bracket.`);
+        }
+        ((state.brackets ||= {})[season] ||= {})[state.user.id] = { ...picks };
+        save(state); await delay();
+      },
+      async bracketLeaderboard(season) {
+        const rows = Object.entries(state.brackets?.[season] || {}).map(([u, picks]) => {
+          let points = 0, correct = 0, decided = 0;
+          for (const [k, v] of Object.entries(picks)) {
+            const g = state.pkGames[`${season}:${k}`];
+            if (!g || g.home_score == null || g.away_score == null || !g.home || !g.away) continue;
+            decided++;
+            const win = g.home_score > g.away_score ? g.home : g.away_score > g.home_score ? g.away : null;
+            if (v === win) { correct++; points += JFF.bracketPoints(g.round); }
+          }
+          return { name: state.pkNames?.[u] || 'Fan', points, correct, decided, me: u === state.user?.id };
+        }).filter((r) => r.decided).sort((a, b) => b.points - a.points || b.correct - a.correct);
+        rows.forEach((r, i) => { r.rank = i && r.points === rows[i - 1].points && r.correct === rows[i - 1].correct ? rows[i - 1].rank : i + 1; });
+        return delay(rows);
+      },
+      async bracketCount(season) { return Object.values(state.brackets?.[season] || {}).filter((p) => Object.keys(p).length).length; },
+      async bracketChampions(season) {
+        if (!state.user) return [];
+        const m = new Map();
+        for (const picks of Object.values(state.brackets?.[season] || {})) for (const [k, v] of Object.entries(picks)) {
+          if (state.pkGames[`${season}:${k}`]?.round !== 'Final') continue;
+          const key = k + '|' + v; m.set(key, (m.get(key) || 0) + 1);
+        }
+        return delay([...m].map(([key, picks]) => { const [game_id, team] = key.split('|'); return { game_id, team, picks }; }));
       },
       resetDemo() { try { localStorage.removeItem(KEY); } catch {} location.reload(); },
     };
@@ -423,19 +496,55 @@
       if (!r.ok) throw new Error('Could not load the schedule.');
       return r.json();
     },
-    // season.json games → pickem_games rows.
+    // season.json games → pickem_games rows. Later playoff games get their teams from the
+    // results of the games feeding them ("W:MQF1" = winner of MQF1), once those are played.
     pickemRows(season, key = cfg.PICKEM_SEASON) {
       const now = new Date().toISOString();
-      return season.games.filter((g) => g.id && g.date && g.time).map((g) => ({
-        id: `${key}:${g.id}`, season: key,
-        round_key: g.stage === 'playoff' ? 'playoffs' : 'w' + g.week,
-        division: g.division,
-        kickoff: new Date(`${g.date}T${g.time}:00+07:00`).toISOString(),
-        home: g.home || null, away: g.away || null,
-        home_score: g.home && g.away && g.homeScore != null ? g.homeScore : null,
-        away_score: g.home && g.away && g.awayScore != null ? g.awayScore : null,
-        updated_at: now,
-      }));
+      const byId = Object.fromEntries(season.games.map((g) => [g.id, g]));
+      const teamsOf = (g, seen = 0) => [side(g, 'home', seen), side(g, 'away', seen)];
+      function side(g, s, seen) {
+        if (g[s]) return g[s];
+        const m = /^([WL]):(.+)$/.exec(g[s + 'Slot'] || ''), f = m && byId[m[2]];
+        if (!f || seen > 6 || f.homeScore == null || f.awayScore == null || f.homeScore === f.awayScore) return null;
+        const [h, a] = teamsOf(f, seen + 1); if (!h || !a) return null;
+        const homeWon = f.homeScore > f.awayScore;
+        return (m[1] === 'W') === homeWon ? h : a;
+      }
+      return season.games.filter((g) => g.id && g.date && g.time).map((g) => {
+        const [home, away] = teamsOf(g);
+        return {
+          id: `${key}:${g.id}`, season: key,
+          round_key: g.stage === 'playoff' ? 'playoffs' : 'w' + g.week,
+          division: g.division,
+          kickoff: new Date(`${g.date}T${g.time}:00+07:00`).toISOString(),
+          home, away,
+          home_score: home && away && g.homeScore != null ? g.homeScore : null,
+          away_score: home && away && g.awayScore != null ? g.awayScore : null,
+          bracket: g.bracket || null, round: g.round || null,
+          home_slot: g.homeSlot || null, away_slot: g.awaySlot || null,
+          updated_at: now,
+        };
+      });
+    },
+    // ─── Bracket challenge ───
+    BRACKET_ROUNDS: ['Quarterfinal', 'Semifinal', 'Final', '3rd place'],
+    inBracket(g) { return ['Playoffs', 'Championship'].includes(g.bracket) && JFF.BRACKET_ROUNDS.includes(g.round); },
+    bracketPoints(round) { return { Quarterfinal: 1, Semifinal: 2, '3rd place': 2, Final: 4 }[round] || 0; },
+    // The two teams a bracket sends to game `short` (e.g. "MSF1"): real teams in the first round,
+    // otherwise the winners/losers of the feeder games according to the bracket's own picks.
+    // `games` is an object of pickem_games rows keyed by id.
+    bracketTeams(games, season, picks, short, depth = 0) {
+      const g = games[`${season}:${short}`]; if (!g || depth > 6) return [null, null];
+      const slot = (team, ref) => {
+        if (team) return team;
+        const m = /^([WL]):(.+)$/.exec(ref || ''); if (!m) return null;
+        const w = picks[m[2]]; if (m[1] === 'W') return w || null;
+        const [h, a] = JFF.bracketTeams(games, season, picks, m[2], depth + 1);
+        return !w || !h || !a ? null : w === h ? a : w === a ? h : null;
+      };
+      // Only the first round uses the real teams; later rounds follow the bracket's picks.
+      const first = !/^[WL]:/.test(g.home_slot || '');
+      return [slot(first ? g.home : null, g.home_slot), slot(first ? g.away : null, g.away_slot)];
     },
     toast(msg, kind = '') {
       let el = document.getElementById('toast');

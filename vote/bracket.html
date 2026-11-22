@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bracket Challenge — JFF Feeling Gue Sih…</title>
+<meta name="description" content="Fill out the whole Open SZN IV playoff bracket before Playoff Day. Call every upset, crown your champions, climb the JFF leaderboard.">
+<meta property="og:title" content="JFF Bracket Challenge — Feeling Gue Sih…">
+<meta property="og:description" content="Fill out the whole Open SZN IV playoff bracket before Playoff Day.">
+<meta property="og:image" content="jff-logo.png">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0e0e0e">
+<link rel="icon" href="jff-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=br1">
+</head>
+<body class="pk-page">
+
+<nav class="nav">
+  <a class="nav-logo" href="https://jakartaflagfootball.com/">
+    <img src="jff-logo.png" alt="JFF">
+    <div class="nav-logo-text">JFF Stats<span>Bracket</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="https://jakartaflagfootball.com/open-szn-4/" class="hide-xs">← Open SZN IV</a>
+    <a href="feeling.html">Pick'em</a>
+    <a href="index.html">Vote POTW</a>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="container">
+    <div class="eyebrow" id="seasonLabel">Open SZN IV · Playoff Day</div>
+    <h1 class="page-title"><span class="title-kicker">Feeling Gue Sih…</span>Bracket <span>Challenge</span></h1>
+    <p class="page-sub">Call every playoff game before Playoff Day. Quarterfinals 1 pt, semifinals and 3rd place 2 pts, finals 4 pts. One bracket per fan, locked at the first kickoff.</p>
+    <div class="week-bar">
+      <div class="week-stat"><b id="myPicks">—</b><small>Your picks</small></div>
+      <div class="week-stat"><b id="myPoints">—</b><small>Your points</small></div>
+      <div class="week-stat"><b id="lockIn">—</b><small id="lockLabel">Brackets lock in</small></div>
+      <div class="week-stat"><b id="bracketCount">—</b><small>Brackets in</small></div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div id="demoBanner"></div>
+  <div class="auth-bar" id="authBar"></div>
+
+  <div class="br-top">
+    <div class="pk-toggle br-div" id="divToggle" role="tablist">
+      <button type="button" data-div="men" class="active">Men</button>
+      <button type="button" data-div="women">Women</button>
+    </div>
+    <span class="br-status" id="saveState"></span>
+  </div>
+
+  <div class="br-wrap"><div class="br" id="bracket"><p class="lb-empty">Loading the bracket…</p></div></div>
+  <p class="br-hint" id="hint"></p>
+
+  <div class="pk-share" id="shareBox"></div>
+
+  <div class="vote-layout br-bottom">
+    <section>
+      <div class="section-header"><h2>Fans' champions</h2><small id="champNote"></small></div>
+      <div id="champions"></div>
+    </section>
+    <aside class="lb-panel">
+      <div class="section-header"><h2>Leaderboard</h2></div>
+      <div class="lb" id="leaderboard"></div>
+      <div class="lb-updated">Points count as each playoff result comes in.</div>
+    </aside>
+  </div>
+
+  <section id="how" style="padding:1rem 0 4rem">
+    <div class="section-header"><h2>How it works</h2></div>
+    <div style="color:var(--muted);font-size:.92rem;max-width:720px;display:grid;gap:.6rem">
+      <p><b style="color:var(--text)">1. Pick a winner for every game,</b> starting with the first round. Your winners move on to the next round, and the losing semifinalists meet in the 3rd place game.</p>
+      <p><b style="color:var(--text)">2. Change it as often as you like</b> until the first playoff kickoff. Then every bracket locks.</p>
+      <p><b style="color:var(--text)">3. Score:</b> quarterfinal 1 pt, semifinal 2, 3rd place 2, final 4, for each team you called that actually wins that game. Max 24 (Men 14, Women 10).</p>
+      <p><b style="color:var(--text)">4. The top bracket</b> gets crowned on JFF's socials. Only the name you choose is shown, never your email.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <img src="jff-logo.png" alt="JFF">
+  <p>Jakarta Flag Football · Est. 2022</p>
+  <p class="footer-small">Feeling Gue Sih… Bracket Challenge</p>
+</footer>
+
+<div class="modal-back" id="signinModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+    <button class="modal-close" data-close>✕</button>
+    <h3 id="signinTitle">Sign in to save your bracket</h3>
+    <p>We use Google sign-in to save your bracket and keep the leaderboard fair. Only the name you choose is shown.</p>
+    <div class="modal-actions signin-slot" id="modalSignin"></div>
+  </div>
+</div>
+
+<div class="modal-back" id="nameModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+    <button class="modal-close" data-close>✕</button>
+    <h3 id="nameTitle">Your leaderboard name</h3>
+    <p>This is what other fans see. It's the same name as in Pick'em.</p>
+    <form id="nameForm" class="pk-name-form">
+      <input name="name" class="search-input" maxlength="24" minlength="2" required autocomplete="nickname" placeholder="e.g. Raka F.">
+      <div class="modal-actions"><button class="btn-primary" type="submit">Save</button></div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="config.js?v=br1"></script>
+<script src="jff-auth.js"></script>
+<script src="roster.js"></script>
+<script src="api.js?v=br1"></script>
+<script src="bracket.js?v=br1"></script>
+</body>
+</html>

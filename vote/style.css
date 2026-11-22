@@ -487,3 +487,62 @@ body[data-side="defense"] { --side: var(--def); --side-bright: var(--def-bright)
 .next-play.red { border-color: rgba(192,57,43,.45); background: rgba(192,57,43,.1); }
 .next-play.red span:last-child { color: var(--accent-bright); }
 .next-play.red:hover { border-color: var(--accent-bright); }
+
+/* ─── BRACKET CHALLENGE ─── */
+.br-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 2rem 0 1rem; flex-wrap: wrap; }
+.br-div button { font-size: .8rem; padding: .45rem 1.2rem; letter-spacing: .12em; text-transform: uppercase; }
+.br-status { font-size: .78rem; color: var(--muted); }
+.br-status.ok { color: var(--ok); }
+.br-status.warn { color: var(--gold); }
+.br-wrap { overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 2px; scroll-snap-type: x mandatory; scroll-padding: 0 16px; }
+.br-wrap::-webkit-scrollbar { display: none; }
+.br { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: 1.25rem; align-items: stretch; }
+.br-col { display: flex; flex-direction: column; scroll-snap-align: start; }
+.br-col h3, .br-sub { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; letter-spacing: .06em; color: var(--gold); margin-bottom: .6rem; }
+.br-sub { margin: 1rem 0 .4rem; font-size: 1.05rem; color: var(--muted); }
+.br-games { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: .8rem; }
+.br-col-final .br-games { justify-content: center; }
+.br-game { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: .55rem; display: grid; gap: .35rem; position: relative; }
+.br-game.third { opacity: .92; }
+.br-meta { display: flex; justify-content: space-between; align-items: center; font-size: .66rem; letter-spacing: .08em; color: var(--muted); padding: 0 .15rem; }
+.br-pts { font-weight: 600; color: var(--muted); }
+.br-pts.dim { color: #555; font-weight: 500; }
+.br-pts.ok { color: var(--ok); }
+.br-team { position: relative; display: flex; align-items: center; gap: .5rem; width: 100%; min-height: 46px; padding: .4rem .55rem; background: var(--bg); border: 2px solid var(--border); border-radius: 5px; text-align: left; transition: border-color .15s, background .15s, transform .1s; }
+.br-team:not(:disabled):hover { border-color: #555; }
+.br-team:not(:disabled):active { transform: scale(.98); }
+.br-team:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.br-team:disabled { cursor: default; }
+.br-team.mine { border-color: var(--gold); background: rgba(201,168,76,.1); }
+.br-team.mine.right { border-color: var(--ok); background: rgba(46,204,113,.1); }
+.br-team.mine.wrong { border-color: rgba(231,76,60,.6); background: rgba(231,76,60,.08); }
+.br-team.won .br-name { font-weight: 700; }
+.br-team.empty { border-style: dashed; background: transparent; }
+.br-tbd { font-size: .78rem; color: #666; font-style: italic; }
+.br-logo { width: 28px; height: 28px; }
+.br-name { flex: 1; min-width: 0; font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.br-seed { font-size: .66rem; font-weight: 700; color: var(--muted); min-width: 1rem; text-align: center; }
+.br-score { font-family: var(--font-display); font-size: 1.25rem; line-height: 1; color: var(--muted); }
+.br-team.won .br-score { color: var(--text); }
+.br-check { width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #111; font-size: .7rem; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+.br-team.right .br-check { background: var(--ok); }
+.br-team.wrong .br-check { background: var(--accent-bright); color: #fff; }
+.br-champ { display: grid; justify-items: center; gap: .35rem; text-align: center; padding: 1rem .75rem; border: 1px dashed var(--border); border-radius: 8px; background: radial-gradient(ellipse 80% 100% at 50% 0%, rgba(201,168,76,.14), transparent 70%), var(--surface); }
+.br-champ.set { border-style: solid; border-color: rgba(201,168,76,.55); }
+.br-champ small { font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.br-champ b { font-family: var(--font-display); font-weight: 400; font-size: 1.7rem; letter-spacing: .04em; line-height: 1; }
+.br-champ b.br-tbd { font-family: var(--font-body); font-size: .85rem; }
+.br-champ-logo { width: 52px; height: 52px; }
+.br-real { font-size: .72rem; color: var(--muted); }
+.br-hint { font-size: .72rem; color: #666; margin-top: .6rem; display: none; }
+.br-bottom { margin-top: 1rem; }
+.br-champs { margin-bottom: 1.25rem; }
+.br-champs h4 { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: .5rem; }
+.br-champs .lb-row { grid-template-columns: 34px minmax(0,1fr) auto; }
+@media (max-width: 760px) {
+  .br { grid-auto-columns: 82%; gap: .8rem; }
+  .br-hint { display: block; }
+  .br-team { min-height: 50px; }
+}
+.next-play.gold { border-color: rgba(201,168,76,.4); }
+.br-team.busted .br-name { text-decoration: line-through; text-decoration-color: rgba(231,76,60,.7); color: var(--muted); }

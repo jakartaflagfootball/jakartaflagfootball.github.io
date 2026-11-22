@@ -12,7 +12,7 @@
     const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.max(1, Math.floor(ms / 6e4) % 60);
     return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`;
   };
-  let vote = null, pick = null;
+  let vote = null, pick = null, bracket = null;
 
   function render() {
     const now = Date.now(), cards = [];
@@ -25,7 +25,13 @@
         <span class="play-sub">${open ? `${vote.label} · closes in <b>${left(+new Date(vote.ends_at) - now)}</b>` : `${vote.label}: vote for the best offense and defense players`}</span>
         <span class="play-cta">Vote now <span aria-hidden="true">→</span></span></a>`);
     }
-    if (pick && +new Date(pick.kickoff) > now) cards.push(`<a class="play-card gold" href="vote/feeling.html">
+    // Before Playoff Day, the bracket challenge replaces the pick'em card.
+    if (bracket && +new Date(bracket) > now) cards.push(`<a class="play-card gold" href="vote/bracket.html">
+        <span class="play-kicker"><i class="play-dot"></i>Bracket Challenge</span>
+        <span class="play-title">Call the <em>playoffs</em></span>
+        <span class="play-sub">Fill out the whole bracket before Playoff Day. Locks in <b>${left(+new Date(bracket) - now)}</b></span>
+        <span class="play-cta">Fill your bracket <span aria-hidden="true">→</span></span></a>`);
+    else if (pick && +new Date(pick.kickoff) > now) cards.push(`<a class="play-card gold" href="vote/feeling.html">
         <span class="play-kicker"><i class="play-dot"></i>Pick'em · ${pick.round}</span>
         <span class="play-title">Feeling Gue <em>Sih…</em></span>
         <span class="play-sub">Tebak who wins every game. Next pick locks in <b>${left(+new Date(pick.kickoff) - now)}</b></span>
@@ -47,6 +53,11 @@
         .filter((x) => +new Date(x.kickoff) > Date.now())
         .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))[0];
       pick = g ? { kickoff: g.kickoff, round: g.stage === 'playoff' ? 'Playoffs' : 'Week ' + g.week } : null;
+      // Bracket challenge: open once the pool stage is over, locks at the first title-bracket kickoff.
+      const title = s.games.filter((x) => ['Playoffs', 'Championship'].includes(x.bracket) && ['Quarterfinal', 'Semifinal', 'Final', '3rd place'].includes(x.round));
+      const poolDone = s.games.filter((x) => x.stage === 'pool').every((x) => x.homeScore != null && x.awayScore != null);
+      const lock = Math.min(...title.map((x) => +new Date(`${x.date}T${x.time}:00+07:00`)));
+      bracket = poolDone && isFinite(lock) ? new Date(lock).toISOString() : null;
     }),
   ]).then(() => { render(); setInterval(render, 60000); });
 })();
