@@ -115,7 +115,7 @@
   // ─── STATE ──────────────────────────────────────────────
   const S = {
     data: null, byId: {}, num: {}, photoById: {}, faces: {}, star: {},
-    sort: 'overall', bestOnly: true, starOnly: false, person: null, game: '', allPeople: false,
+    sort: 'overall', bestOnly: true, starOnly: false, person: null, week: '', game: '', allPeople: false,
     list: [], shown: 0, idx: -1, fixing: null, user: null,
   };
 
@@ -150,13 +150,25 @@
     if (c.length === 1) return { name: rosterName(c[0]) };
     return c.length > 1 ? { name: t, choices: c } : { name: t };
   }
-  const topOf = (f) => f.split('/')[0];
-  const shortGame = (f) => f.split('/').slice(1).join(' › ') || f;
-  function inGame(p) {
-    if (!S.game) return true;
-    if (S.game.startsWith('top:')) return topOf(p.folder) === S.game.slice(4);
-    return p.folder === S.game.slice(2);
+  // Week and game from folder names: "… WEEK 3 …" or "2. DAY 3" (a day is that week's match day).
+  // A game is the folder without its "FIRST HALF"/"SECOND HALF" part, so both halves count as one.
+  const WEEK_RE = /\b(?:week|day)\s*(\d+)/i, HALF_RE = /^(first|second)\s+half$/i;
+  const clean = (s) => s.replace(/^\s*\d+\.\s*/, '').trim();
+  const FOLDERS = {};
+  function folderInfo(f) {
+    if (FOLDERS[f]) return FOLDERS[f];
+    const parts = f.split('/');
+    const wi = parts.findIndex((s) => WEEK_RE.test(s));
+    const week = wi >= 0 ? +parts[wi].match(WEEK_RE)[1] : 0;
+    const gameParts = parts.filter((s, i) => !(i === parts.length - 1 && HALF_RE.test(s.trim())));
+    // photographer: the @handles a folder name starts with ("@KVN_MEDIA 20261122 … @DM SPORT" → @KVN_MEDIA)
+    const by = [...new Set(parts.flatMap((s) => { const t = s.trim().split(/\s+/), k = t.findIndex((x) => !x.startsWith('@')); return t.slice(0, k < 0 ? t.length : k); }))].join(' ');
+    let rest = gameParts.slice(wi + 1).map(clean);
+    if (!rest.length) rest = [clean(parts[wi] || parts[parts.length - 1]).replace(WEEK_RE, '').trim() || 'All'];
+    return (FOLDERS[f] = { week, game: gameParts.join('/'), label: rest.join(' › '), by });
   }
+  const inWeek = (p) => !S.week || String(folderInfo(p.folder).week) === S.week;
+  const inGame = (p) => inWeek(p) && (!S.game || folderInfo(p.folder).game === S.game);
   const recomputePeople = (p) => { p.people = [...new Set(p.faces.map((f) => f.person).filter((g) => g != null))]; };
 
   // ─── GATE ───────────────────────────────────────────────
@@ -235,15 +247,29 @@
   }
 
   function renderGames() {
-    const counts = {};
-    S.data.photos.forEach((p) => (counts[p.folder] = (counts[p.folder] || 0) + 1));
-    const tops = {};
-    Object.keys(counts).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).forEach((f) => (tops[topOf(f)] ||= []).push(f));
-    let html = `<option value="">All games (${S.data.photos.length})</option>`;
-    for (const [top, folders] of Object.entries(tops)) {
-      const n = folders.reduce((s, f) => s + counts[f], 0);
-      html += `<optgroup label="${esc(top)}"><option value="top:${esc(top)}">All of this upload (${n})</option>` +
-        folders.map((f) => `<option value="f:${esc(f)}">${esc(shortGame(f))} (${counts[f]})</option>`).join('') + '</optgroup>';
+    const weeks = {};
+    S.data.photos.forEach((p) => { const w = folderInfo(p.folder).week; weeks[w] = (weeks[w] || 0) + 1; });
+    const ws = Object.keys(weeks).map(Number).sort((a, b) => (a || 1e9) - (b || 1e9));
+    const wsel = $('#week');
+    wsel.innerHTML = `<option value="">All weeks (${S.data.photos.length})</option>` +
+      ws.map((w) => `<option value="${w}">${w ? `Week ${w}` : 'Other'} (${weeks[w]})</option>`).join('');
+    wsel.value = S.week;
+    wsel.onchange = () => { S.week = wsel.value; S.game = ''; renderGames(); renderPeople(); renderGrid(); };
+
+    // games of the chosen week, grouped by photographer
+    const games = {};
+    S.data.photos.filter(inWeek).forEach((p) => {
+      const i = folderInfo(p.folder);
+      (games[i.game] ||= { ...i, n: 0 }).n++;
+    });
+    const byWho = {};
+    Object.values(games).sort((a, b) => (a.week || 1e9) - (b.week || 1e9) || a.game.localeCompare(b.game, undefined, { numeric: true }))
+      .forEach((g) => (byWho[(S.week ? '' : `Week ${g.week || '?'} · `) + (g.by || 'Other')] ||= []).push(g));
+    const n = S.data.photos.filter(inWeek).length;
+    let html = `<option value="">All games (${n})</option>`;
+    for (const [who, gs] of Object.entries(byWho)) {
+      html += `<optgroup label="${esc(who)}">` +
+        gs.map((g) => `<option value="${esc(g.game)}">${esc(g.label)} (${g.n})</option>`).join('') + '</optgroup>';
     }
     const sel = $('#game'); sel.innerHTML = html; sel.value = S.game;
     sel.onchange = () => { S.game = sel.value; renderPeople(); renderGrid(); };
