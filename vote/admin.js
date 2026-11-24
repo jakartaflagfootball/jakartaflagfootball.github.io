@@ -21,6 +21,8 @@
     const boards = await Promise.all(weeks.map((w) => api.leaderboard(w.id)));
     const voters = await Promise.all(weeks.map((w) => api.voterCount(w.id)));
     const noms = await Promise.all(weeks.map((w) => (w.nominations ? api.listNominations(w.id).catch(() => []) : [])));
+    const dqs = await Promise.all(weeks.map((w) => api.listDisqualifications(w.id).catch(() => [])));
+    const voided = await Promise.all(weeks.map((w) => api.voidedVotes(w.id).catch(() => [])));
     $('weeks').innerHTML = weeks.map((w, i) => {
       const [label, cls] = status(w);
       const res = CATEGORIES.map((c) => {
@@ -44,8 +46,50 @@
         </div>
         ${w.nominations ? nomSummary(noms[i]) : ''}
         <div class="week-results">${res}</div>
+        ${eligibility(w, noms[i], boards[i], dqs[i], voided[i])}
       </div>`;
     }).join('') || '<p class="lb-empty">No weeks yet. Create the first one above.</p>';
+  }
+
+  // Disqualify a player from one category for this week (e.g. played offense but not defense).
+  const openElig = new Set();
+  function eligibility(w, noms, board, dq, voided) {
+    const ids = new Set([...(w.nominations ? noms.map((n) => n.player_id) : []), ...board.map((r) => r.player_id), ...dq.map((d) => d.player_id)]);
+    const list = [...ids].map((id) => players[id]).filter(Boolean)
+      .sort((a, b) => a.division.localeCompare(b.division) || teams[a.team].name.localeCompare(teams[b.team].name) || (a.nickname || a.full_name).localeCompare(b.nickname || b.full_name));
+    if (!list.length) return '';
+    const dqOf = (pid, c) => dq.find((d) => d.player_id === pid && d.category === c);
+    const nVoid = (pid, c) => voided.filter((v) => v.player_id === pid && v.category === c).length;
+    const rows = list.map((p) => {
+      const chips = ['offense', 'defense'].map((side) => {
+        const c = `${p.division}_${side}`, d = dqOf(p.id, c), label = side === 'offense' ? 'Offense' : 'Defense';
+        return d
+          ? `<button class="elig-chip dq" type="button" data-elig="${w.id}|${esc(p.id)}|${c}|1" title="Make eligible again">✕ ${label} · ${esc(d.reason || 'disqualified')}${nVoid(p.id, c) ? ` · ${nVoid(p.id, c)} vote${nVoid(p.id, c) === 1 ? '' : 's'} voided` : ''}</button>`
+          : `<button class="elig-chip" type="button" data-elig="${w.id}|${esc(p.id)}|${c}|0" title="Disqualify from ${label}">✓ ${label}</button>`;
+      }).join('');
+      return `<div class="elig-row"><span><b>${esc(p.nickname || p.full_name)} #${esc(p.number)}</b> <small>${esc(teams[p.team].name)} · ${p.division === 'men' ? "Men's" : "Women's"}</small></span><span class="elig-chips">${chips}</span></div>`;
+    }).join('');
+    return `<details class="elig" data-week="${w.id}" ${openElig.has(w.id) ? 'open' : ''}><summary>Eligibility${dq.length ? ` · <b>${dq.length} disqualified</b>` : ''} <small>Tap a category to disqualify a player who didn't play it</small></summary>${rows}</details>`;
+  }
+
+  document.addEventListener('toggle', (e) => {
+    const d = e.target; if (!d.matches?.('details.elig')) return;
+    d.open ? openElig.add(+d.dataset.week) : openElig.delete(+d.dataset.week);
+  }, true);
+
+  async function toggleEligibility(key) {
+    const [w, pid, c, isDq] = key.split('|'), p = players[pid], side = c.endsWith('offense') ? 'offense' : 'defense', who = p.nickname || p.full_name;
+    if (isDq === '1') {
+      if (!confirm(`Make ${who} eligible for ${side} again? Their voided ${side} votes will count again (except from fans who have since voted for someone else).`)) return;
+      const n = await api.setEligibility(+w, pid, c, false);
+      JFF.toast(`${who} is eligible for ${side} again · ${n} vote${n === 1 ? '' : 's'} restored`);
+    } else {
+      const reason = prompt(`Disqualify ${who} from ${c.startsWith('men') ? "Men's" : "Women's"} ${side} this week?\nTheir ${side} votes stop counting (offense/defense is separate), and those fans can vote again.\n\nReason shown on the vote page:`, `Didn't play ${side}`);
+      if (reason == null) return;
+      const n = await api.setEligibility(+w, pid, c, true, reason.trim().slice(0, 60));
+      JFF.toast(`${who} disqualified from ${side} · ${n} vote${n === 1 ? '' : 's'} voided`);
+    }
+    openElig.add(+w); render();
   }
 
   function nomSummary(rows) {
@@ -166,6 +210,7 @@
       else if (d.undesigner) { if (!confirm(`Remove ${d.undesigner} as a designer?`)) return; await api.removeDesigner(d.undesigner); JFF.toast('Designer removed'); return renderDesigners(); }
       else if (t.id === 'convertBtn') { await convertOldPhotos(t); return; }
       else if (t.id === 'pickemSyncBtn') { await syncPickem(t); return; }
+      else if (d.elig) { await toggleEligibility(d.elig); return; }
       else if (d.uncaptain) { if (!confirm(`Remove ${d.email} as captain of ${teams[d.uncaptain].name}?`)) return; await api.removeCaptain(d.uncaptain, d.email); JFF.toast('Captain removed'); return renderCaptains(); }
       else if (d.clear) {
         if (!confirm(`Remove ALL votes in "${d.label}"? The week stays open, and everyone (including you) can vote again. This cannot be undone.`)) return;

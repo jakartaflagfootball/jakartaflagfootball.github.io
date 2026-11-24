@@ -7,7 +7,7 @@
 
   const params = new URLSearchParams(location.search);
   const S = {
-    user: null, weeks: [], week: null, myVotes: {}, board: [], voters: 0, noms: null, photos: {},
+    user: null, weeks: [], week: null, myVotes: {}, voided: {}, dq: {}, board: [], voters: 0, noms: null, photos: {},
     cat: CATEGORIES.includes(params.get('c')) ? params.get('c') : 'men_offense',
     invite: players[params.get('p')] || null,
     search: '', team: '', showAll: false, pending: null,
@@ -42,7 +42,7 @@
     $('catTabs').innerHTML = CATEGORIES.map((c) => {
       const [div, side] = CATEGORY_LABEL[c].split(' ');
       const mine = players[S.myVotes[c]];
-      const state = mine ? `✓ ${esc(mine.nickname || mine.full_name)}` : S.user && open() ? 'Not voted yet' : '';
+      const state = mine ? `✓ ${esc(mine.nickname || mine.full_name)}` : S.voided[c] && open() ? 'Vote voided · vote again' : S.user && open() ? 'Not voted yet' : '';
       return `<button class="cat-tab ${c === S.cat ? 'active' : ''}" role="tab" aria-selected="${c === S.cat}" data-cat="${c}" data-side="${sideOf(c)}">
         <span class="cat-tab-div">${esc(div)}</span><span class="cat-tab-name">${esc(side)}</span>
         <span class="cat-tab-state ${mine ? 'done' : ''}">${state || '&nbsp;'}</span></button>`;
@@ -134,15 +134,18 @@
     const card = (p) => {
       const isMine = mine === p.id;
       const side = sideName();
-      const btn = isMine ? `<button class="pc-vote is-mine" disabled>✓ ${side}</button>`
+      const dq = S.dq[S.cat + '|' + p.id];
+      const btn = dq != null ? '<button class="pc-vote" disabled>Not eligible</button>'
+        : isMine ? `<button class="pc-vote is-mine" disabled>✓ ${side}</button>`
         : mine ? '<button class="pc-vote" disabled>Voted</button>'
         : !open() ? `<button class="pc-vote" disabled>${notStarted() ? 'Opens soon' : 'Closed'}</button>`
         : `<button class="pc-vote" data-vote="${p.id}" aria-label="Vote ${esc(p.nickname || p.full_name)} for ${esc(CATEGORY_LABEL[S.cat])}">Vote ${side}</button>`;
       const photo = api.photoUrl(S.photos[p.id]);
-      return `<article class="player-card ${photo ? 'has-photo' : ''} ${isMine ? 'voted' : mine ? 'dim' : ''} ${S.invite?.id === p.id ? 'highlight' : ''}" id="pc-${p.id}">
+      return `<article class="player-card ${photo ? 'has-photo' : ''} ${dq != null ? 'dq' : isMine ? 'voted' : mine ? 'dim' : ''} ${S.invite?.id === p.id ? 'highlight' : ''}" id="pc-${p.id}">
         ${photo ? `<div class="pc-photo"><img src="${esc(photo)}" alt="${esc(p.nickname || p.full_name)}" loading="lazy"></div>` : ''}
         <div class="pc-top"><span class="pc-num">${esc(p.number)}</span><span class="pc-pos ${p.position ? '' : 'empty'}">${esc(p.position || 'Pos TBA')}</span></div>
         <div><div class="pc-nick">${esc(p.nickname || p.full_name)}</div><div class="pc-full">${esc(p.full_name)}</div></div>
+        ${dq != null ? `<div class="pc-dq">Not eligible for ${esc(side)} this week${dq ? `: ${esc(dq)}` : ''}</div>` : ''}
         <div class="pc-actions">${btn}<button class="pc-share" data-share="${p.id}" title="Share ${esc(p.nickname)}'s vote link" aria-label="Share">${SHARE_ICON}</button></div>
       </article>`;
     };
@@ -167,9 +170,14 @@
     $('demoBanner').innerHTML = api.demo
       ? `<div class="demo-banner"><span>⚠ <b>Demo mode.</b> Votes are saved only in this browser, with fake votes from other fans. Add your Supabase keys in config.js to go live.</span><button class="btn-link" id="resetDemo">Reset demo</button></div>` : '';
     $('resetDemo')?.addEventListener('click', () => api.resetDemo());
+    const voided = Object.entries(S.voided).filter(([c, pid]) => players[pid] && !S.myVotes[c]);
+    const voidHtml = voided.length && S.week ? voided.map(([c, pid]) => {
+      const vp = players[pid], why = S.dq[c + '|' + pid];
+      return `<div class="invite-banner void-banner">Your <b>${esc(CATEGORY_LABEL[c])}</b> vote for <b>${esc(vp.nickname || vp.full_name)}</b> was voided${why ? ` (${esc(why)})` : ''}, so it doesn't count. ${open() ? `<button class="btn-link" data-cat="${c}">Vote again in ${esc(CATEGORY_LABEL[c])}</button>` : ''}</div>`;
+    }).join('') : '';
     const p = S.invite;
-    $('inviteBanner').innerHTML = p
-      ? `<div class="invite-banner">🏈 You've been invited to vote for <b>${esc(p.nickname || p.full_name)} #${esc(p.number)}</b> (${esc(playerLine(p))}) for <b>${esc(CATEGORY_LABEL[S.cat])}</b>. Find them highlighted below.</div>` : '';
+    $('inviteBanner').innerHTML = voidHtml + (p
+      ? `<div class="invite-banner">🏈 You've been invited to vote for <b>${esc(p.nickname || p.full_name)} #${esc(p.number)}</b> (${esc(playerLine(p))}) for <b>${esc(CATEGORY_LABEL[S.cat])}</b>. Find them highlighted below.</div>` : '');
   }
 
   function renderAll() { renderBanners(); renderAuth(); renderWeek(); renderTabs(); renderTeamFilter(); renderPlayers(); renderBoard(); }
@@ -188,13 +196,26 @@
   async function refreshBoard() {
     if (!S.week) return;
     try {
-      if (S.week.nominations && await loadNoms()) renderPlayers();
+      const nomsChanged = S.week.nominations && await loadNoms();
+      if (await loadDq() || nomsChanged) {
+        // A disqualification may have voided this fan's vote.
+        if (S.user) { S.myVotes = await api.myVotes(S.week.id); S.voided = S.myVotes.voided || {}; renderBanners(); renderAuth(); renderTabs(); }
+        renderPlayers();
+      }
       [S.board, S.voters] = await Promise.all([api.leaderboard(S.week.id), api.voterCount(S.week.id)]);
       renderBoard(); $('voterCount').textContent = Number(S.voters).toLocaleString('en-US');
     } catch (e) { console.error(e); }
   }
+  async function loadDq() {
+    const rows = S.week && api.listDisqualifications ? await api.listDisqualifications(S.week.id).catch(() => []) : [];
+    const next = Object.fromEntries(rows.map((r) => [r.category + '|' + r.player_id, r.reason || '']));
+    const changed = JSON.stringify(next) !== JSON.stringify(S.dq);
+    S.dq = next; return changed;
+  }
   async function loadWeek() {
     S.myVotes = S.week ? await api.myVotes(S.week.id) : {};
+    S.voided = S.myVotes.voided || {};
+    await loadDq();
     S.board = []; S.voters = 0; S.noms = null; S.photos = {};
     try { await loadNoms(); } catch (e) { console.error(e); }
     renderAll(); await refreshBoard(); renderWeek();
@@ -225,7 +246,7 @@
     btn.disabled = true; btn.textContent = 'Voting…';
     try {
       await api.castVote(S.week.id, cat, pid);
-      S.myVotes[cat] = pid; hideModals();
+      S.myVotes[cat] = pid; delete S.voided[cat]; hideModals(); renderBanners();
       renderAuth(); renderTabs(); renderPlayers(); await refreshBoard();
       openShare(pid, cat, true);
     } catch (e) {

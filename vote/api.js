@@ -42,14 +42,28 @@
       async listWeeks() { return ok(await sb.from('potw_weeks').select('*').order('starts_at', { ascending: false })); },
       async myVotes(weekId) {
         const user = await this.getUser(); if (!user) return {};
-        const rows = ok(await sb.from('potw_votes').select('category,player_id').eq('week_id', weekId).eq('voter_id', user.id));
-        return Object.fromEntries(rows.map((r) => [r.category, r.player_id]));
+        const rows = ok(await sb.from('potw_votes').select('category,player_id,void').eq('week_id', weekId).eq('voter_id', user.id));
+        const mine = Object.fromEntries(rows.filter((r) => !r.void).map((r) => [r.category, r.player_id]));
+        // Votes voided by a disqualification, in categories where the fan hasn't voted again.
+        Object.defineProperty(mine, 'voided', { value: Object.fromEntries(rows.filter((r) => r.void && !mine[r.category]).map((r) => [r.category, r.player_id])) });
+        return mine;
       },
+      // ─── Disqualifications (see supabase/disqualify.sql) ───
+      async listDisqualifications(weekId) {
+        const { data, error } = await sb.from('potw_disqualifications').select('player_id,category,reason').eq('week_id', weekId);
+        if (error) { console.warn(error); return []; }
+        return data;
+      },
+      async setEligibility(weekId, playerId, category, dq, reason = '') {
+        return ok(await sb.rpc('potw_set_eligibility', { w: weekId, p: playerId, c: category, dq, why: reason }));
+      },
+      // Admin: voided votes per player and category.
+      async voidedVotes(weekId) { return ok(await sb.from('potw_votes').select('category,player_id').eq('week_id', weekId).eq('void', true)); },
       async castVote(weekId, category, playerId) {
         const { error } = await sb.from('potw_votes').insert({ week_id: weekId, category, player_id: playerId });
         if (error) {
           if (error.code === '23505') throw new Error('You already voted in this category this week.');
-          if (error.code === '42501') throw new Error('Vote not accepted. Voting may have closed. Refresh the page and try again.');
+          if (error.code === '42501') throw new Error("Vote not accepted. Voting may have closed, or this player isn't eligible in this category this week. Refresh the page and try again.");
           throw error;
         }
       },
@@ -244,8 +258,25 @@
       async listWeeks() { return delay([...state.weeks].sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at))); },
       async myVotes(weekId) {
         if (!state.user) return {};
-        return Object.fromEntries(state.votes.filter((v) => v.week_id === weekId && v.voter_id === state.user.id).map((v) => [v.category, v.player_id]));
+        const rows = state.votes.filter((v) => v.week_id === weekId && v.voter_id === state.user.id);
+        const mine = Object.fromEntries(rows.filter((v) => !v.void).map((v) => [v.category, v.player_id]));
+        Object.defineProperty(mine, 'voided', { value: Object.fromEntries(rows.filter((v) => v.void && !mine[v.category]).map((v) => [v.category, v.player_id])) });
+        return mine;
       },
+      async listDisqualifications(weekId) { return delay((state.dq || []).filter((d) => d.week_id === weekId)); },
+      async setEligibility(weekId, playerId, category, dq, reason = '') {
+        state.dq = (state.dq || []).filter((d) => !(d.week_id === weekId && d.player_id === playerId && d.category === category));
+        let n = 0;
+        if (dq) {
+          state.dq.push({ week_id: weekId, player_id: playerId, category, reason });
+          for (const v of state.votes) if (v.week_id === weekId && v.player_id === playerId && v.category === category && !v.void) { v.void = true; n++; }
+        } else {
+          for (const v of state.votes) if (v.week_id === weekId && v.player_id === playerId && v.category === category && v.void
+            && !state.votes.some((o) => o.week_id === weekId && o.category === category && o.voter_id === v.voter_id && !o.void)) { v.void = false; n++; }
+        }
+        save(state); return n;
+      },
+      async voidedVotes(weekId) { return state.votes.filter((v) => v.week_id === weekId && v.void).map(({ category, player_id }) => ({ category, player_id })); },
       async castVote(weekId, category, playerId) {
         if (!state.user) throw new Error('Please sign in first.');
         const w = state.weeks.find((x) => x.id === weekId);
@@ -253,17 +284,18 @@
         const p = window.JFF_PLAYERS.find((x) => x.id === playerId);
         if (!p || p.division !== category.split('_')[0]) throw new Error('That player is not in this category.');
         if (w.nominations && !(state.nominations || []).some((n) => n.week_id === weekId && n.player_id === playerId)) throw new Error('That player was not nominated this week.');
-        if (state.votes.some((v) => v.week_id === weekId && v.category === category && v.voter_id === state.user.id))
+        if ((state.dq || []).some((d) => d.week_id === weekId && d.player_id === playerId && d.category === category)) throw new Error('This player is not eligible in this category this week.');
+        if (state.votes.some((v) => v.week_id === weekId && v.category === category && v.voter_id === state.user.id && !v.void))
           throw new Error('You already voted in this category this week.');
         state.votes.push({ week_id: weekId, category, player_id: playerId, voter_id: state.user.id });
         save(state); await delay();
       },
       async leaderboard(weekId) {
         const m = new Map();
-        for (const v of state.votes) if (v.week_id === weekId) { const k = v.category + '|' + v.player_id; m.set(k, (m.get(k) || 0) + 1); }
+        for (const v of state.votes) if (v.week_id === weekId && !v.void) { const k = v.category + '|' + v.player_id; m.set(k, (m.get(k) || 0) + 1); }
         return delay([...m].map(([k, n]) => { const [category, player_id] = k.split('|'); return { category, player_id, votes: n }; }).sort((a, b) => b.votes - a.votes));
       },
-      async voterCount(weekId) { return new Set(state.votes.filter((v) => v.week_id === weekId).map((v) => v.voter_id)).size; },
+      async voterCount(weekId) { return new Set(state.votes.filter((v) => v.week_id === weekId && !v.void).map((v) => v.voter_id)).size; },
       async isAdmin() { return !!state.user; },
       async createWeek(w) { const row = { id: state.nextWeek++, closed: false, ...w }; state.weeks.push(row); save(state); return row; },
       async updateWeek(id, patch) { const w = state.weeks.find((x) => x.id === id); Object.assign(w, patch); save(state); return w; },
