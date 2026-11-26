@@ -501,16 +501,23 @@
         });
       }
       const W = src.width, H = src.height;
-      const enc = (r, q) => {
+      const enc = (r, q, crop) => {
         const c = document.createElement('canvas');
-        c.width = Math.max(1, Math.round(W * r)); c.height = Math.max(1, Math.round(H * r));
-        c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+        let sx = 0, sy = 0, sw = W, sh = H;
+        if (crop) { // 4:5, positioned like the cards' object-position: center 25%
+          sw = Math.min(W, H * 4 / 5); sh = sw * 5 / 4;
+          sx = (W - sw) / 2; sy = (H - sh) * 0.25;
+        }
+        c.width = Math.max(1, Math.round(sw * r)); c.height = Math.max(1, Math.round(sh * r));
+        c.getContext('2d').drawImage(src, sx, sy, sw, sh, 0, 0, c.width, c.height);
         return new Promise((res) => c.toBlob(res, 'image/jpeg', q));
       };
       // Enough pixels to fill a w×h (4:5) crop.
       const fill = (w, h) => Math.min(1, Math.max(w / W, h / H));
       // One at a time, to keep memory low on phones.
-      const sm = await enc(fill(600, 750), 0.8);
+      // Card copy: cropped to the card's 4:5 and kept small (~40 KB), since every vote-page visitor
+      // downloads all of them. Medium (Stories) and full (designers) keep the whole frame.
+      const sm = await enc(Math.min(1, 480 / Math.min(W, H * 4 / 5)), 0.72, true);
       const md = await enc(fill(1080, 1350), 0.84);
       const full = keepFull ? file : await enc(Math.min(1, 3000 / Math.max(W, H)), 0.9);
       src.close?.();
